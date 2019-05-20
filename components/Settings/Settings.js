@@ -10,7 +10,7 @@ import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 
 import PropTypes from "prop-types";
 
-class Sync extends Component {
+class Settings extends Component {
   _logout() {
     AsyncStorage.removeItem("user").then(() =>
       this.props.navigation.navigate("Login")
@@ -42,8 +42,8 @@ class Sync extends Component {
   }
 }
 
-Sync.propTypes = {
+Settings.propTypes = {
   navigation: PropTypes.any
 };
 
-export default Sync;
+export default Settings;

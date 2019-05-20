@@ -24,7 +24,7 @@ export default class ArticlesPick extends Component {
     this.props.toggleBasketModal();
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     DB.getDatabase().then(db => {
       db.transaction(tx => {
         tx.executeSql(
@@ -40,17 +40,14 @@ export default class ArticlesPick extends Component {
               data.push(results.rows.item(i));
             }
 
-            const test = _.times(40, () => {
-              return data[0];
-            });
-
-            this.setState({ availableArticles: test, isLoading: false });
+            this.setState({ availableArticles: data, isLoading: false });
           }
         );
       });
     });
   }
   render() {
+    const colors = ["grey", "orange", "red", "green", "#571db2"];
     return (
       <ScrollView>
         <View style={styles.list}>
@@ -70,7 +67,10 @@ export default class ArticlesPick extends Component {
                 <View
                   style={[
                     styles.article,
-                    { opacity: _.find(this.props.articles, article) ? 0.3 : 1 }
+                    {
+                      opacity: _.find(this.props.articles, article) ? 0.3 : 1,
+                      backgroundColor: colors[index % colors.length]
+                    }
                   ]}
                 >
                   <TouchableOpacity
@@ -86,6 +86,14 @@ export default class ArticlesPick extends Component {
                       }}
                     >
                       {article.Designation}
+                    </Text>
+                    <Text
+                      style={{
+                        color: "white",
+                        textAlign: "center"
+                      }}
+                    >
+                      {article.Code_Article.slice(-4)}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -116,7 +124,6 @@ const styles = StyleSheet.create({
     padding: 5
   },
   article: {
-    backgroundColor: "grey",
     flex: 1,
     opacity: 1,
     justifyContent: "center",

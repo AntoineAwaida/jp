@@ -21,10 +21,43 @@ import BasketModal from "./modals/BasketModal";
 import Checkout from "./layouts/Checkout";
 import ArticlesList from "./layouts/articles/ArticlesList";
 import ArticlesPick from "./layouts/articles/ArticlesPick";
+import { DB } from "../../database/database";
+import Customers from "./customers/Customers";
+
+import SelectedCustomer from "./customers/SelectedCustomer";
 
 const EventEmitter = require("events");
 
 class Orders extends Component {
+  static navigationOptions = ({ navigation }) => {
+    const { params = {} } = navigation.state;
+    return {
+      headerLeft: params.articles && params.articles.length > 0 && (
+        <FontAwesome5
+          style={{ marginLeft: 10 }}
+          color="#571db2"
+          name="shopping-cart"
+          size={30}
+          onPress={() =>
+            navigation.navigate("ArticlesList", {
+              articles: params.articles,
+              ee: params.ee
+            })
+          }
+        />
+      ),
+      headerRight: (
+        <FontAwesome5
+          style={{ marginRight: 20 }}
+          color="#571db2"
+          name="history"
+          size={30}
+          onPress={() => navigation.navigate("ListOrders")}
+        />
+      )
+    };
+  };
+
   constructor(props, context) {
     super(props, context);
     this.state = {
@@ -37,27 +70,85 @@ class Orders extends Component {
     };
     this.toggleCustomerModal.bind(this);
     this.toggleBasketModal.bind(this);
-    this.deleteArticle.bind(this);
+
+    this.clearOffer.bind(this);
+    this.cancelCustomer = this.cancelCustomer.bind(this);
+    this.selectCustomer = this.selectCustomer.bind(this);
   }
 
-  deleteArticle(article) {
-    this.setState(state => {
-      const articles = state.articles.filter((item, j) => article !== item);
-      return {
-        articles
-      };
+  clearOffer() {
+    this.setState({ customer: null, articles: [] });
+  }
+
+  componentDidMount() {
+    this.state.ee.on("editArticles", articles => {
+      this.setState({ articles });
     });
+
+    const { articles, ee } = this.state;
+    this.props.navigation.setParams({ articles, ee });
+
+    navigator.geolocation.getCurrentPosition(
+      res => {
+        console.log(res);
+      },
+      err => {
+        console.log(err);
+      },
+      { enableHighAccuracy: false, timeout: 5000 }
+    );
+
+    //insérer un article...
+    // DB.getDatabase().then(db =>
+    //   db.transaction(tx => {
+    //     tx.executeSql(
+    //       `INSERT INTO ArticleDepot VALUES ('305408 0007616', '50') `
+    //     );
+    //     tx.executeSql(
+    //       `INSERT INTO ArticleDepot VALUES ('305408 0053323', '50') `
+    //     );
+    //     tx.executeSql(
+    //       `INSERT INTO ArticleDepot VALUES ('305832 0005028', '50') `
+    //     );
+    //     tx.executeSql(
+    //       `INSERT INTO ArticleDepot VALUES ('305832 0010152', '50') `
+    //     );
+    //   })
+    // );
+    //pour supprimer les commandes...
+    // DB.getDatabase().then(db => {
+    //   db.transaction(tx => {
+    //     tx.executeSql(`DELETE FROM pct_COMMANDE`);
+    //     tx.executeSql("DELETE FROM pct_COMMANDEcomposition");
+    //   });
+    // });
   }
 
   toggleBasketModal(article) {
     article
-      ? this.setState({
-          isBasketModalVisible: !this.state.isBasketModalVisible,
-          articles: [...this.state.articles, article]
-        })
-      : this.setState({
-          isBasketModalVisible: !this.state.isBasketModalVisible
-        });
+      ? this.setState(
+          {
+            isBasketModalVisible: !this.state.isBasketModalVisible,
+            articles: [...this.state.articles, article]
+          },
+          () => {
+            const { articles } = this.state;
+            this.props.navigation.setParams({ articles });
+          }
+        )
+      : this.setState(
+          {
+            isBasketModalVisible: !this.state.isBasketModalVisible
+          },
+          () => {
+            const { articles } = this.state;
+            this.props.navigation.setParams({ articles });
+          }
+        );
+  }
+
+  selectCustomer(customer) {
+    this.setState({ customer: customer });
   }
 
   toggleCustomerModal(customer) {
@@ -78,7 +169,12 @@ class Orders extends Component {
         },
         {
           text: "Yes",
-          onPress: () => this.setState({ customer: null, articles: [] })
+          onPress: () =>
+            this.setState({ customer: null, articles: [] }, () => {
+              this.props.navigation.setParams({
+                articles: this.state.articles
+              });
+            })
         }
       ],
       { cancelable: false }
@@ -88,127 +184,77 @@ class Orders extends Component {
   render() {
     return (
       <SafeAreaView style={style.contain}>
-        <CustomerModal
-          isVisible={this.state.isCustomerModalVisible}
-          toggleCustomerModal={e => this.toggleCustomerModal(e)}
-        />
         <BasketModal
           article={this.state.article}
           isVisible={this.state.isBasketModalVisible}
           ee={this.state.ee}
           toggleBasketModal={e => this.toggleBasketModal(e)}
         />
-        <View style={style.customerContainer}>
-          {this.state.customer ? (
-            <View style={{ flexDirection: "row" }}>
-              <View
-                style={{
-                  flex: 0.8,
-                  alignItems: "center"
-                }}
-              >
-                <View style={{ flexDirection: "row" }}>
-                  <FontAwesome5 name="user" size={30} solid />
-                  <Text h4 style={{ marginLeft: 5 }}>
-                    {this.state.customer.RaisonSociale}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center"
-                  }}
-                >
-                  <FontAwesome5 name="phone" />
-                  <Text style={{ marginLeft: 5 }}>
-                    {this.state.customer.TelFacturation}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center"
-                  }}
-                >
-                  <FontAwesome5 name="truck-moving" />
-                  <Text style={{ marginLeft: 5 }}>
-                    {this.state.customer.AdrLivraison1}
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  flex: 0.2,
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <TouchableOpacity onPress={() => this.cancelCustomer()}>
-                  <FontAwesome5
-                    name="times-circle"
-                    solid
-                    color="red"
-                    size={40}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <>
-              <View style={{ flex: 0.33 }}>
-                <Text>Select a customer.</Text>
-              </View>
 
-              <View
-                style={{
-                  flex: 0.67,
-                  justifyContent: "space-evenly",
-                  flexDirection: "row"
-                }}
-              >
-                <View>
+        {!this.state.customer ? (
+          <View style={{ flex: 1 }}>
+            <View style={{ flex: 0.1 }}>
+              <Text>Select a customer.</Text>
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+
+                flexDirection: "row"
+              }}
+            >
+              <Customers selectCustomer={this.selectCustomer} />
+              {/* <View style={{ flex: 0.5 }}>
                   <Button
                     icon={<Icon name="search" size={27} color="white" />}
                     title=" Search"
                     onPress={() => this.toggleCustomerModal()}
                   />
                 </View>
-                <View>
+                <View style={{ flex: 0.5 }}>
                   <Button
                     title=" Create"
                     icon={
                       <FontAwesome5 name="user-plus" size={25} color="white" />
                     }
                   />
-                </View>
+                </View> */}
+            </View>
+          </View>
+        ) : (
+          <>
+            <View style={style.customerContainer}>
+              <SelectedCustomer
+                customer={this.state.customer}
+                cancelCustomer={this.cancelCustomer}
+              />
+            </View>
+            <View style={style.shoppingCardContainer}>
+              {/* <View style={style.listArticles}>
+                <ArticlesList
+                  deleteArticle={e => this.deleteArticle(e)}
+                  articles={this.state.articles}
+                />
+              </View> */}
+              <View style={style.pickArticles}>
+                <ArticlesPick
+                  articles={this.state.articles}
+                  ee={this.state.ee}
+                  toggleBasketModal={e => this.toggleBasketModal(e)}
+                />
               </View>
-            </>
-          )}
-        </View>
-        <View style={style.shoppingCardContainer}>
-          <View style={style.listArticles}>
-            <ArticlesList
-              deleteArticle={e => this.deleteArticle(e)}
-              articles={this.state.articles}
-            />
-          </View>
-          <View style={style.pickArticles}>
-            <ArticlesPick
-              articles={this.state.articles}
-              ee={this.state.ee}
-              toggleBasketModal={e => this.toggleBasketModal(e)}
-            />
-          </View>
-        </View>
-        <View style={{ flex: 0.1 }}>
-          <Checkout
-            articles={this.state.articles}
-            navigation={this.props.navigation}
-            customer={this.state.customer}
-          />
-        </View>
+            </View>
+            <View style={{ flex: 0.1 }}>
+              <Checkout
+                clearOffer={() => this.clearOffer()}
+                articles={this.state.articles}
+                navigation={this.props.navigation}
+                customer={this.state.customer}
+              />
+            </View>
+          </>
+        )}
       </SafeAreaView>
     );
   }
@@ -230,11 +276,9 @@ const style = StyleSheet.create({
   },
 
   shoppingCardContainer: {
-    flex: 0.9,
-    flexDirection: "row"
+    flex: 0.9
   },
   listArticles: {
-    flex: 0.4,
     marginRight: 10
   },
   pickArticles: {

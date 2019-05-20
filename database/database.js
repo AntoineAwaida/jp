@@ -4,7 +4,7 @@ import SQLite from "react-native-sqlite-storage";
 SQLite.DEBUG(true);
 SQLite.enablePromise(true);
 const database_name = "jp.db";
-let conn = SQLite.openDatabase(database_name);
+let conn = SQLite.openDatabase({ name: database_name });
 
 class Database {
   constructor() {

@@ -7,8 +7,82 @@ import PropTypes from "prop-types";
 
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 
+import save from "../saveOrder";
+import { DB } from "../../../database/database";
+
 function Checkout(props) {
   const [price, setPrice] = useState(0);
+  const [code, setCode] = useState(0);
+
+  function saveOrder() {
+    DB.getDatabase()
+      .then(db => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `SELECT Code_Commande FROM pct_COMMANDE ORDER BY Code_Commande DESC limit 1`,
+            [],
+            (tx, results) => {
+              let code_commande = 0;
+
+              if (results.rows.length > 0) {
+                code_commande = results.rows.item(0)["Code_Commande"] + 1;
+                setCode(code_commande);
+              }
+
+              tx.executeSql(
+                `INSERT INTO pct_COMMANDE(Code_Client, Code_Commande, DateCreation, MontantAcompte, nomPoste) VALUES (?, ?, ?, ?, ?)`,
+                [
+                  props.customer.Code_Client,
+                  code_commande,
+                  new Date()
+                    .toISOString()
+                    .slice(0, 19)
+                    .replace("T", " "),
+                  price,
+                  "pp01"
+                ]
+              );
+              props.articles.map((article, i) => {
+                tx.executeSql(
+                  `INSERT INTO pct_COMMANDEcomposition(Code_Commande, Code_Article, Quantite, PrixUnitaire, NumLigne, nomPoste) VALUES (?, ?, ?, ?, ?, ?)`,
+                  [
+                    code_commande,
+                    article.Code_Article,
+                    article.quantity,
+                    article.PrixUnitaire,
+                    i,
+                    "pp01"
+                  ]
+                );
+              });
+              props.articles.map(article => {
+                tx.executeSql(
+                  `UPDATE ArticleDepot SET StockDepot=? WHERE Code_Article=?`,
+                  [article.StockDepot - article.quantity, article.Code_Article]
+                );
+              });
+            }
+          );
+        });
+      })
+      .then(() => {
+        DB.getDatabase().then(db => {
+          db.transaction(tx => {
+            tx.executeSql(
+              `SELECT Code_Commande FROM pct_COMMANDE ORDER BY Code_Commande DESC limit 1`,
+              [],
+              (tx, results) => {
+                code_commande = results.rows.item(0)["Code_Commande"];
+                props.navigation.navigate("ViewOrder", {
+                  Code_Commande: code_commande
+                });
+                props.clearOffer();
+              }
+            );
+          });
+        });
+      });
+  }
 
   useEffect(() => {
     let total_price = 0;
@@ -38,7 +112,7 @@ function Checkout(props) {
         <Button
           onPress={() => {
             props.customer && props.articles.length > 0
-              ? props.navigation.navigate("ViewOrder")
+              ? saveOrder()
               : Alert.alert(
                   "Please select a client and at least an article in your basket."
                 );
@@ -55,7 +129,8 @@ function Checkout(props) {
 Checkout.propTypes = {
   articles: PropTypes.array,
   navigation: PropTypes.any,
-  customer: PropTypes.any
+  customer: PropTypes.any,
+  clearOffer: PropTypes.func
 };
 
 export default Checkout;
