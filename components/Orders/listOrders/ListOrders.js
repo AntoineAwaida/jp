@@ -77,7 +77,9 @@ export default class ListOrders extends Component {
               subtitle={
                 <View>
                   <Text>{item.MontantAcompte}</Text>
-                  <Text>{item.RaisonSociale}</Text>
+                  <Text style={{ textAlign: "right" }}>
+                    {item.RaisonSociale}
+                  </Text>
                   <Text>{item.DateCreation.toString()}</Text>
                 </View>
               }

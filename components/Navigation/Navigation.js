@@ -14,6 +14,11 @@ import ListOrders from "../Orders/listOrders/ListOrders";
 import Login from "../Login/Login";
 import ArticlesList from "../Orders/layouts/articles/ArticlesList";
 import Settings from "../Settings/Settings";
+import Logs from "../Settings/Logs";
+
+import React from "react";
+
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 
 const OrderNavigator = createStackNavigator(
   {
@@ -37,6 +42,15 @@ const OrderNavigator = createStackNavigator(
     initialRouteParams: "Orders"
   }
 );
+
+const SettingsNavigator = createStackNavigator({
+  Settings: {
+    screen: Settings
+  },
+  Logs: {
+    screen: Logs
+  }
+});
 
 const TabNavigator = createBottomTabNavigator(
   {
@@ -77,10 +91,28 @@ const TabAdminNavigator = createBottomTabNavigator(
     },
 
     Settings: {
-      screen: Settings
+      screen: SettingsNavigator
     }
   },
   {
+    defaultNavigationOptions: ({ navigation }) => ({
+      tabBarIcon: ({ focused, horizontal, tintColor }) => {
+        let IconComponent = FontAwesome5;
+        const { routeName } = navigation.state;
+        if (routeName === "Orders") {
+          iconName = "list-alt";
+        } else if (routeName === "Map") {
+          iconName = "map-signs";
+        } else if (routeName === "Sync") {
+          iconName = "sync-alt";
+        } else {
+          iconName = "cog";
+        }
+
+        return <IconComponent name={iconName} size={25} color={tintColor} />;
+      }
+    }),
+
     tabBarOptions: {
       activeBackgroundColor: "purple",
       activeTintColor: "white",

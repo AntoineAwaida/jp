@@ -17,35 +17,53 @@ class Customers extends Component {
       isLoading: false,
       search: null
     };
+    this.tiemout = 0;
+  }
+
+  selectCustomer(customer) {
+    this.props.emitter.emit("customerSelected");
+    this.props.selectCustomer(customer);
   }
 
   getCustomers(text) {
-    this.setState({ isLoading: true, search: text }, () => {
-      DB.getDatabase().then(db => {
-        db.transaction(tx => {
-          tx.executeSql(
-            `SELECT * FROM CLIENT WHERE RaisonSociale LIKE '%${text}%'`,
-            [],
-            (tx, results) => {
-              let data = [];
-              for (let i = 0; i < results.rows.length; i++) {
-                data.push(results.rows.item(i));
-              }
-              this.setState({ matchingCustomers: data, isLoading: false });
-            }
-          );
+    this.setState({ search: text });
+    if (this.timeout) clearTimeout(this.timeout);
+    this.timeout = setTimeout(() => {
+      if (text.length > 1) {
+        const searchtext = text.replace(/'/g, "&quot;");
+        this.setState({ isLoading: true }, () => {
+          DB.getDatabase().then(db => {
+            db.transaction(tx => {
+              tx.executeSql(
+                `SELECT * FROM CLIENT WHERE RaisonSociale LIKE '%${searchtext}%'`,
+                [],
+                (tx, results) => {
+                  let data = [];
+                  for (let i = 0; i < results.rows.length; i++) {
+                    data.push(results.rows.item(i));
+                  }
+                  this.setState({ matchingCustomers: data, isLoading: false });
+                }
+              );
+            });
+          });
         });
-      });
-    });
+      } else {
+        this.setState({ matchingCustomers: [] });
+      }
+    }, 400);
   }
 
   render() {
     return (
       <View style={{ flex: 1 }}>
         <SearchBar
-          lightTheme
-          round
-          containerStyle={{ backgroundColor: "white" }}
+          inputContainerStyle={{ backgroundColor: "white", borderRadius: 50 }}
+          containerStyle={{
+            backgroundColor: "transparent",
+            borderBottomColor: "transparent",
+            borderTopColor: "transparent"
+          }}
           placeholder="Search..."
           onChangeText={text => this.getCustomers(text)}
           value={this.state.search}
@@ -57,13 +75,15 @@ class Customers extends Component {
             <ActivityIndicator size="large" />
           ) : (
             <FlatList
+              contentContainerStyle={{ borderRadius: 20 }}
               keyExtractor={item => item.Code_Client}
               data={this.state.matchingCustomers}
               renderItem={({ item }) => (
                 <ListItem
+                  titleStyle={{ textAlign: "center" }}
                   key={item.Code_Client}
                   title={item.RaisonSociale}
-                  onPress={() => this.props.selectCustomer(item)}
+                  onPress={() => this.selectCustomer(item)}
                 />
               )}
             />
@@ -75,7 +95,8 @@ class Customers extends Component {
 }
 
 Customers.propTypes = {
-  selectCustomer: PropTypes.any
+  selectCustomer: PropTypes.any,
+  emitter: PropTypes.any
 };
 
 export default Customers;

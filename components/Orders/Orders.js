@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, Keyboard, Animated } from "react-native";
 
 import PropTypes from "prop-types";
 
 import { SafeAreaView } from "react-navigation";
 
-import { SearchBar, Button, Icon, ListItem, Text } from "react-native-elements";
+import { Text } from "react-native-elements";
 
 import _ from "lodash";
 
@@ -35,7 +35,7 @@ class Orders extends Component {
       headerLeft: params.articles && params.articles.length > 0 && (
         <FontAwesome5
           style={{ marginLeft: 10 }}
-          color="#571db2"
+          color="#6200ee"
           name="shopping-cart"
           size={30}
           onPress={() =>
@@ -49,7 +49,7 @@ class Orders extends Component {
       headerRight: (
         <FontAwesome5
           style={{ marginRight: 20 }}
-          color="#571db2"
+          color="#6200ee"
           name="history"
           size={30}
           onPress={() => navigation.navigate("ListOrders")}
@@ -66,6 +66,7 @@ class Orders extends Component {
       customer: null,
       article: null,
       articles: [],
+      articlesPickOpacity: new Animated.Value(0),
       ee: new EventEmitter()
     };
     this.toggleCustomerModal.bind(this);
@@ -80,10 +81,45 @@ class Orders extends Component {
     this.setState({ customer: null, articles: [] });
   }
 
-  componentDidMount() {
+  listenKeyboard() {
+    this.keyboardDidShowlistener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        this.state.ee.emit("keyboardUp");
+      }
+    );
+
+    this.keyboardDidHidelistener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        this.state.ee.emit("keyboardDown");
+      }
+    );
+  }
+
+  listenEvents() {
     this.state.ee.on("editArticles", articles => {
       this.setState({ articles });
     });
+
+    this.state.ee.addListener("customerSelected", () => {
+      this.setState({ articlesPickOpacity: new Animated.Value(0) }, () => {
+        Animated.timing(this.state.articlesPickOpacity, {
+          toValue: 1,
+          duration: 1000
+        }).start();
+      });
+    });
+  }
+
+  componentWillUnmount() {
+    this.keyboardDidShowlistener.remove();
+    this.keyboardDidHidelistener.remove();
+  }
+
+  componentDidMount() {
+    this.listenKeyboard();
+    this.listenEvents();
 
     const { articles, ee } = this.state;
     this.props.navigation.setParams({ articles, ee });
@@ -182,6 +218,7 @@ class Orders extends Component {
   }
 
   render() {
+    console.log(this.state._keyboardShown);
     return (
       <SafeAreaView style={style.contain}>
         <BasketModal
@@ -192,9 +229,11 @@ class Orders extends Component {
         />
 
         {!this.state.customer ? (
-          <View style={{ flex: 1 }}>
-            <View style={{ flex: 0.1 }}>
-              <Text>Select a customer.</Text>
+          <View style={style.selectCustomercontainer}>
+            <View style={{ flex: 0.1, justifyContent: "center" }}>
+              <Text style={{ fontSize: 20, color: "white" }}>
+                Select a customer.
+              </Text>
             </View>
 
             <View
@@ -204,7 +243,10 @@ class Orders extends Component {
                 flexDirection: "row"
               }}
             >
-              <Customers selectCustomer={this.selectCustomer} />
+              <Customers
+                emitter={this.state.ee}
+                selectCustomer={this.selectCustomer}
+              />
               {/* <View style={{ flex: 0.5 }}>
                   <Button
                     icon={<Icon name="search" size={27} color="white" />}
@@ -223,37 +265,44 @@ class Orders extends Component {
             </View>
           </View>
         ) : (
-          <>
-            <View style={style.customerContainer}>
-              <SelectedCustomer
-                customer={this.state.customer}
-                cancelCustomer={this.cancelCustomer}
-              />
-            </View>
-            <View style={style.shoppingCardContainer}>
-              {/* <View style={style.listArticles}>
+          <Animated.View
+            style={{ flex: 1, opacity: this.state.articlesPickOpacity }}
+          >
+            <View style={style.selectCustomercontainer}>
+              <View style={style.customerContainer}>
+                <SelectedCustomer
+                  customer={this.state.customer}
+                  cancelCustomer={this.cancelCustomer}
+                />
+              </View>
+              <View style={style.shoppingCardContainer}>
+                {/* <View style={style.listArticles}>
                 <ArticlesList
                   deleteArticle={e => this.deleteArticle(e)}
                   articles={this.state.articles}
                 />
               </View> */}
-              <View style={style.pickArticles}>
-                <ArticlesPick
-                  articles={this.state.articles}
-                  ee={this.state.ee}
-                  toggleBasketModal={e => this.toggleBasketModal(e)}
-                />
+                <View style={style.pickArticles}>
+                  <ArticlesPick
+                    articles={this.state.articles}
+                    ee={this.state.ee}
+                    toggleBasketModal={e => this.toggleBasketModal(e)}
+                  />
+                </View>
               </View>
             </View>
-            <View style={{ flex: 0.1 }}>
-              <Checkout
-                clearOffer={() => this.clearOffer()}
-                articles={this.state.articles}
-                navigation={this.props.navigation}
-                customer={this.state.customer}
-              />
-            </View>
-          </>
+            {
+              <View style={{ flex: 0.1 }}>
+                <Checkout
+                  emitter={this.state.ee}
+                  clearOffer={() => this.clearOffer()}
+                  articles={this.state.articles}
+                  navigation={this.props.navigation}
+                  customer={this.state.customer}
+                />
+              </View>
+            }
+          </Animated.View>
         )}
       </SafeAreaView>
     );
@@ -267,7 +316,7 @@ Orders.propTypes = {
 const style = StyleSheet.create({
   contain: {
     flex: 1,
-    padding: 10
+    backgroundColor: "rgba(98, 0, 238, .8)"
   },
   customerContainer: {
     flex: 0.2,
@@ -282,7 +331,10 @@ const style = StyleSheet.create({
     marginRight: 10
   },
   pickArticles: {
-    flex: 0.6
+    flex: 1
+  },
+  selectCustomercontainer: {
+    flex: 0.9
   }
 });
 

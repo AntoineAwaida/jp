@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { View } from "react-native";
+import { View, StyleSheet } from "react-native";
 
 import { Text } from "react-native-elements";
 
@@ -20,8 +20,8 @@ class SelectedCustomer extends Component {
           }}
         >
           <View style={{ flexDirection: "row" }}>
-            <FontAwesome5 name="user" size={30} solid />
-            <Text h4 style={{ marginLeft: 5 }}>
+            <FontAwesome5 name="user" style={style.textColor} size={30} solid />
+            <Text h4 style={[{ marginLeft: 5 }, style.textColor]}>
               {this.props.customer.RaisonSociale}
             </Text>
           </View>
@@ -32,8 +32,8 @@ class SelectedCustomer extends Component {
               alignItems: "center"
             }}
           >
-            <FontAwesome5 name="phone" />
-            <Text style={{ marginLeft: 5 }}>
+            <FontAwesome5 style={style.textColor} name="phone" />
+            <Text style={[{ marginLeft: 5 }, style.textColor]}>
               {this.props.customer.TelFacturation}
             </Text>
           </View>
@@ -44,8 +44,8 @@ class SelectedCustomer extends Component {
               alignItems: "center"
             }}
           >
-            <FontAwesome5 name="truck-moving" />
-            <Text style={{ marginLeft: 5 }}>
+            <FontAwesome5 style={style.textColor} name="truck-moving" />
+            <Text style={[{ marginLeft: 5 }, style.textColor]}>
               {this.props.customer.AdrLivraison1}
             </Text>
           </View>
@@ -65,6 +65,12 @@ class SelectedCustomer extends Component {
     );
   }
 }
+
+const style = StyleSheet.create({
+  textColor: {
+    color: "white"
+  }
+});
 
 SelectedCustomer.propTypes = {
   cancelCustomer: PropTypes.func,

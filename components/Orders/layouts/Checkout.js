@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Text, Button } from "react-native-elements";
 
-import { View, Alert } from "react-native";
+import { View, Alert, StyleSheet, Animated } from "react-native";
 
 import PropTypes from "prop-types";
 
@@ -13,6 +13,8 @@ import { DB } from "../../../database/database";
 function Checkout(props) {
   const [price, setPrice] = useState(0);
   const [code, setCode] = useState(0);
+
+  const [bottomPosition, setbottomPosition] = useState(new Animated.Value(0));
 
   function saveOrder() {
     DB.getDatabase()
@@ -84,6 +86,20 @@ function Checkout(props) {
       });
   }
 
+  props.emitter.addListener("keyboardUp", () => {
+    Animated.timing(bottomPosition, {
+      toValue: -50,
+      duration: 300
+    }).start();
+  });
+
+  props.emitter.addListener("keyboardDown", () => {
+    Animated.timing(bottomPosition, {
+      toValue: 0,
+      duration: 300
+    }).start();
+  });
+
   useEffect(() => {
     let total_price = 0;
     props.articles.map(article => {
@@ -94,15 +110,15 @@ function Checkout(props) {
   });
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: "row",
-        borderTopWidth: 2,
-        borderTopColor: "grey"
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", flex: 0.8 }}>
+    <Animated.View style={[styles.Container, { bottom: bottomPosition }]}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          flex: 0.8,
+          marginLeft: 10
+        }}
+      >
         <FontAwesome5 name="dollar-sign" size={25} color="green" />
         <Text style={{ color: "green" }} h3>
           {"  " + price}
@@ -119,18 +135,27 @@ function Checkout(props) {
           }}
           icon={<FontAwesome5 name="shopping-cart" color="white" size={20} />}
           title="  Checkout"
-          buttonStyle={{ backgroundColor: "green" }}
+          buttonStyle={{ backgroundColor: "green", marginRight: 10 }}
         />
       </View>
-    </View>
+    </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  Container: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "white"
+  }
+});
 
 Checkout.propTypes = {
   articles: PropTypes.array,
   navigation: PropTypes.any,
   customer: PropTypes.any,
-  clearOffer: PropTypes.func
+  clearOffer: PropTypes.func,
+  emitter: PropTypes.any
 };
 
 export default Checkout;
