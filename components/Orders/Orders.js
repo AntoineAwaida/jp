@@ -106,7 +106,10 @@ class Orders extends Component {
 
   listenEvents() {
     this.ee.on("editArticles", articles => {
-      this.setState({ articles: articles, article: null });
+      this.setState({ articles: articles, article: null }, () => {
+        const { articles } = this.state;
+        this.props.navigation.setParams({ articles });
+      });
     });
 
     this.ee.addListener("customerSelected", () => {

@@ -26,12 +26,20 @@ class BasketModal extends React.Component {
       quantity: null,
       article: null
     };
+    this.boundSelectArticle = e => this.selectArticle(e);
+  }
+
+  selectArticle(article) {
+    this.setState({ article: article });
   }
 
   componentDidMount() {
-    this.props.ee.on("selectArticle", article => {
-      this.setState({ article: article });
-    });
+    this.props.ee.on("selectArticle", this.boundSelectArticle);
+  }
+
+  componentWillUnmount() {
+    let boundSelectArticle = this.boundSelectArticle;
+    this.props.ee.removeListener("selectArticle", boundSelectArticle);
   }
 
   handleQuantity = e => {

@@ -19,6 +19,12 @@ function Checkout(props) {
   const [bottomPosition, setbottomPosition] = useState(new Animated.Value(0));
 
   function saveOrder() {
+    let latitude = null;
+    let longitude = null;
+
+    props.GPS &&
+      ((latitude = props.GPS.latitude), (longitude = props.GPS.longitude));
+
     DB.getDatabase()
       .then(db => {
         db.transaction(tx => {
@@ -44,8 +50,8 @@ function Checkout(props) {
                     .replace("T", " "),
                   price,
                   "pp01",
-                  props.GPS.latitude,
-                  props.GPS.longitude
+                  latitude,
+                  longitude
                 ]
               );
               props.articles.map((article, i) => {

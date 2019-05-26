@@ -63,7 +63,7 @@ export default class ListOrders extends Component {
       <ScrollView>
         <FlatList
           keyExtractor={item => item.Code_Commande.toString()}
-          data={this.state.commandes}
+          data={this.state.commandes.reverse()}
           ItemSeparatorComponent={this.renderSeparator}
           renderItem={({ item }) => (
             <ListItem

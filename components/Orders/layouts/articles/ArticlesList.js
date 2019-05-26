@@ -7,17 +7,49 @@ import { ListItem } from "react-native-elements";
 
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import { ActivityIndicator } from "react-native-paper";
+import BasketModal from "../../modals/BasketModal";
 
 export default class ArticlesList extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      articles: null
+      articles: null,
+      isBasketModalVisible: false,
+      article: null
     };
   }
 
   componentDidMount() {
     this.setState({ articles: this.props.navigation.state.params.articles });
+  }
+
+  toggleBasketModal(article) {
+    if (article) {
+      let new_articles = this.state.articles.map(a => {
+        return a.Code_Article === article.Code_Article ? article : a;
+      });
+      this.setState(
+        {
+          isBasketModalVisible: !this.state.isBasketModalVisible,
+          articles: new_articles
+        },
+        () => {
+          this.props.navigation.state.params.ee.emit(
+            "editArticles",
+            this.state.articles
+          );
+        }
+      );
+    } else {
+      this.setState({
+        isBasketModalVisible: !this.state.isBasketModalVisible
+      });
+    }
+  }
+
+  editArticle(article) {
+    this.props.navigation.state.params.ee.emit("selectArticle", article);
+    this.setState({ article: article, isBasketModalVisible: true });
   }
 
   deleteArticle(article) {
@@ -52,49 +84,58 @@ export default class ArticlesList extends Component {
   render() {
     const { articles } = this.state;
 
-    return this.state.articles ? (
-      <View>
-        {articles.length === 0 ? (
-          <Text>Select articles in the list.</Text>
-        ) : (
-          <View>
-            <Text>Your order.</Text>
-            {articles.map(item => (
-              <ListItem
-                key={item.Code_Article}
-                title={item.Designation}
-                subtitle={
-                  "Quantity: " +
-                  item.quantity +
-                  "\nRemaining: " +
-                  (item.StockDepot - item.quantity)
-                }
-                subtitleStyle={{ fontWeight: "bold" }}
-                rightIcon={
-                  <View>
-                    <FontAwesome5
-                      name="pencil-alt"
-                      size={25}
-                      color="blue"
-                      onPress={() => {
-                        this.editArticle(item);
-                      }}
-                    />
-                    <FontAwesome5
-                      name="times"
-                      size={30}
-                      color="red"
-                      onPress={() => {
-                        this.deleteArticle(item);
-                      }}
-                    />
-                  </View>
-                }
-              />
-            ))}
-          </View>
-        )}
-      </View>
+    return articles ? (
+      <>
+        <BasketModal
+          article={this.state.article}
+          isVisible={this.state.isBasketModalVisible}
+          ee={this.props.navigation.state.params.ee}
+          toggleBasketModal={e => this.toggleBasketModal(e)}
+        />
+
+        <View>
+          {articles.length === 0 ? (
+            <Text>Select articles in the list.</Text>
+          ) : (
+            <View>
+              <Text>Your order.</Text>
+              {articles.map(item => (
+                <ListItem
+                  key={item.Code_Article}
+                  title={item.Designation}
+                  subtitle={
+                    "Quantity: " +
+                    item.quantity +
+                    "\nRemaining: " +
+                    (item.StockDepot - item.quantity)
+                  }
+                  subtitleStyle={{ fontWeight: "bold" }}
+                  rightIcon={
+                    <View>
+                      <FontAwesome5
+                        name="pencil-alt"
+                        size={25}
+                        color="blue"
+                        onPress={() => {
+                          this.editArticle(item);
+                        }}
+                      />
+                      <FontAwesome5
+                        name="times"
+                        size={30}
+                        color="red"
+                        onPress={() => {
+                          this.deleteArticle(item);
+                        }}
+                      />
+                    </View>
+                  }
+                />
+              ))}
+            </View>
+          )}
+        </View>
+      </>
     ) : (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
