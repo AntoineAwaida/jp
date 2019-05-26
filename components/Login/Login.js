@@ -26,6 +26,7 @@ class Login extends Component {
       isRetrievingUser: true
     };
     this._emitter = new EventEmitter();
+    this._emitter.setMaxListeners(0);
   }
 
   async componentDidMount() {

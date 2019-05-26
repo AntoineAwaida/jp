@@ -2,7 +2,7 @@ import React, { Component } from "react";
 
 import { View, Text, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { TouchableOpacity, ScrollView } from "react-native-gesture-handler";
 
 import AsyncStorage from "@react-native-community/async-storage";
 
@@ -16,6 +16,8 @@ import MSSQL from "react-native-mssql";
 import testConnection from "./testConnection";
 import BottomMessage from "../Layout/Alert/bottomMessage";
 import { EventEmitter } from "events";
+import logError from "./logError";
+import logCredentials from "./logCredentials";
 
 class Settings extends Component {
   constructor(props, context) {
@@ -23,9 +25,31 @@ class Settings extends Component {
     this.state = {
       isTesting: false,
       connSuccessful: null,
-      message: null
+      message: null,
+      error: null,
+      name: null,
+      password: null,
+      depot: null
     };
     this._emitter = new EventEmitter();
+    this._emitter.setMaxListeners(0);
+
+    this.changeName = this.changeName.bind(this);
+    this.changePassword = this.changePassword.bind(this);
+    this.changeDepot = this.changeDepot.bind(this);
+  }
+
+  async componentDidMount() {
+    let credentials = await AsyncStorage.getItem("credentials");
+    console.log(credentials);
+    if (credentials) {
+      credentials = await JSON.parse(credentials);
+      this.setState({
+        name: credentials.name,
+        password: credentials.password,
+        depot: credentials.depot
+      });
+    }
   }
 
   async provokeError() {
@@ -35,18 +59,7 @@ class Settings extends Component {
         console.log(test[i].name);
       }
     } catch (e) {
-      errors = await AsyncStorage.getItem("logs");
-
-      if (!errors) {
-        errors = [{ date: new Date().toLocaleString(), error: e.message }];
-
-        AsyncStorage.setItem("logs", JSON.stringify(errors));
-      } else {
-        errors = JSON.parse(errors);
-        errors.push({ date: new Date().toLocaleString(), error: e.message });
-
-        AsyncStorage.setItem("logs", JSON.stringify(errors));
-      }
+      logError(e);
     }
   }
 
@@ -63,7 +76,8 @@ class Settings extends Component {
             {
               isTesting: false,
               connSuccessful: false,
-              message: "Error while connecting to the remote database."
+              message: "Error while connecting to the remote database.",
+              error: true
             },
             () => {
               this._emitter.emit("trigger-message");
@@ -73,57 +87,113 @@ class Settings extends Component {
     });
   }
 
+  async saveSettings() {
+    await logCredentials(
+      this.state.name,
+      this.state.password,
+      this.state.depot
+    );
+    this.setState(
+      { message: "Credentials successfully uypdated", error: false },
+      () => {
+        this._emitter.emit("trigger-message");
+      }
+    );
+  }
+
+  changeName(name) {
+    this.setState({ name: name });
+  }
+
+  changePassword(password) {
+    this.setState({ password: password });
+  }
+
+  changeDepot(depot) {
+    this.setState({ depot: depot });
+  }
+
   render() {
     return (
       <>
-        <View style={{ flex: 0.9 }}>
-          <View style={style.logContainer}>
-            <TouchableOpacity
-              onPress={() => this.props.navigation.navigate("Logs")}
-            >
-              <Button mode="text">
-                <FontAwesome5 name="bars" /> Logs
-              </Button>
-            </TouchableOpacity>
-          </View>
-          <View style={style.container}>
-            <View style={style.form}>
-              <Input
-                placeholder="Name"
-                name="Name"
-                clearTextOnFocus={true}
-                inputContainerStyle={style.dividerStyle}
-                textContentType="username"
-                placeholderTextColor="#6200ee"
-                selectionColor="grey"
-                inputStyle={{ color: "#6200ee", marginLeft: 15 }}
-                leftIcon={
-                  <Icon
-                    type="font-awesome"
-                    name="user"
-                    size={20}
-                    color="white"
-                  />
-                }
-              />
-              <Input
-                shake={true}
-                name="password"
-                placeholder="Password"
-                clearTextOnFocus={true}
-                inputContainerStyle={style.dividerStyle}
-                inputStyle={{ color: "#6200ee", marginLeft: 10 }}
-                placeholderTextColor="#6200ee"
-                secureTextEntry={true}
-                textContentType="password"
-                leftIcon={<FontAwesome5 name="key" size={20} color="white" />}
-              />
+        <View style={{ flex: 1 }}>
+          <ScrollView>
+            <View style={style.logContainer}>
+              <TouchableOpacity
+                onPress={() => this.props.navigation.navigate("Logs")}
+              >
+                <Button mode="text">
+                  <FontAwesome5 name="bars" /> Logs
+                </Button>
+              </TouchableOpacity>
             </View>
+            <View style={style.container}>
+              <View style={style.form}>
+                <Input
+                  onChangeText={this.changeName}
+                  value={this.state.name}
+                  placeholder="Name"
+                  name="Name"
+                  clearTextOnFocus={true}
+                  inputContainerStyle={style.dividerStyle}
+                  textContentType="username"
+                  placeholderTextColor="#6200ee"
+                  selectionColor="grey"
+                  inputStyle={{ color: "#6200ee", marginLeft: 15 }}
+                  leftIcon={
+                    <Icon
+                      type="font-awesome"
+                      name="user"
+                      size={20}
+                      color="white"
+                    />
+                  }
+                />
+                <Input
+                  onChangeText={this.changePassword}
+                  value={this.state.password}
+                  shake={true}
+                  name="password"
+                  placeholder="Password"
+                  clearTextOnFocus={true}
+                  inputContainerStyle={style.dividerStyle}
+                  inputStyle={{ color: "#6200ee", marginLeft: 10 }}
+                  placeholderTextColor="#6200ee"
+                  secureTextEntry={true}
+                  textContentType="password"
+                  leftIcon={<FontAwesome5 name="key" size={20} color="white" />}
+                />
+                <Input
+                  onChangeText={this.changeDepot}
+                  value={this.state.depot}
+                  shake={true}
+                  name="nbdepot"
+                  placeholder="Depot"
+                  clearTextOnFocus={true}
+                  inputContainerStyle={style.dividerStyle}
+                  inputStyle={{ color: "#6200ee", marginLeft: 10 }}
+                  placeholderTextColor="#6200ee"
+                  leftIcon={<FontAwesome5 name="key" size={20} color="white" />}
+                />
+              </View>
+
+              <View
+                style={{ flex: 0.5, marginTop: 50, justifyContent: "center" }}
+              >
+                <TouchableOpacity>
+                  <Button mode="contained" onPress={() => this.saveSettings()}>
+                    Save settings
+                  </Button>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <View style={style.login}>
               <TouchableOpacity>
                 {!this.state.connSuccessful ? (
                   <Button
                     mode="contained"
+                    color="purple"
                     loading={this.state.testConnection}
                     onPress={() => this.testConnection()}
                   >
@@ -141,21 +211,22 @@ class Settings extends Component {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-        <View style={{ justifyContent: "center", alignItems: "center" }}>
-          <Button
-            onPress={() => this.provokeError()}
-            mode="contained"
-            color="red"
-          >
-            Error
-          </Button>
+
+            <View style={{ justifyContent: "center", alignItems: "center" }}>
+              <Button
+                onPress={() => this.provokeError()}
+                mode="contained"
+                color="red"
+              >
+                Error
+              </Button>
+            </View>
+          </ScrollView>
         </View>
 
         <BottomMessage
           msg={this.state.message}
-          error={true}
+          error={this.state.error}
           emitter={this._emitter}
         />
       </>
@@ -169,16 +240,15 @@ Settings.propTypes = {
 
 const style = StyleSheet.create({
   logContainer: {
-    flex: 0.2,
+    flex: 0.1,
     alignItems: "flex-end",
     padding: 10
   },
   container: {
-    flex: 1,
-    justifyContent: "flex-start",
     padding: 30,
     backgroundColor: "white",
-    paddingTop: 80
+    flex: 0.8,
+    paddingTop: 30
   },
   dividerStyle: {
     backgroundColor: "transparent",
@@ -191,7 +261,9 @@ const style = StyleSheet.create({
     flex: 0.7
   },
   login: {
-    flex: 0.3
+    flex: 0.5,
+    justifyContent: "center",
+    padding: 30
   }
 });
 

@@ -12,7 +12,7 @@ import PropTypes from "prop-types";
 class SelectedCustomer extends Component {
   render() {
     return (
-      <View style={{ flexDirection: "row" }}>
+      <View style={{ flexDirection: "row", marginBottom: 10, marginTop: 10 }}>
         <View
           style={{
             flex: 0.8,
@@ -68,7 +68,7 @@ class SelectedCustomer extends Component {
 
 const style = StyleSheet.create({
   textColor: {
-    color: "white"
+    color: "purple"
   }
 });
 

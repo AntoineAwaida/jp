@@ -9,6 +9,8 @@ import PropTypes from "prop-types";
 import { DB } from "../../../database/database";
 import { ActivityIndicator } from "react-native-paper";
 
+import LinearGradient from "react-native-linear-gradient";
+
 class Customers extends Component {
   constructor(props, context) {
     super(props, context);
@@ -58,7 +60,7 @@ class Customers extends Component {
     return (
       <View style={{ flex: 1 }}>
         <SearchBar
-          inputContainerStyle={{ backgroundColor: "white", borderRadius: 50 }}
+          inputContainerStyle={{ backgroundColor: "white", borderRadius: 15 }}
           containerStyle={{
             backgroundColor: "transparent",
             borderBottomColor: "transparent",
@@ -80,7 +82,7 @@ class Customers extends Component {
               data={this.state.matchingCustomers}
               renderItem={({ item }) => (
                 <ListItem
-                  titleStyle={{ textAlign: "center" }}
+                  titleStyle={{ textAlign: "center", color: "#6200ee" }}
                   key={item.Code_Client}
                   title={item.RaisonSociale}
                   onPress={() => this.selectCustomer(item)}

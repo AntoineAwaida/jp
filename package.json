@@ -19,6 +19,7 @@
     "react-native-gesture-handler": "^1.2.1",
     "react-native-hide-with-keyboard": "^1.2.0",
     "react-native-keyboard-aware-scroll-view": "^0.8.0",
+    "react-native-linear-gradient": "^2.5.4",
     "react-native-modal": "^10.0.0",
     "react-native-mssql": "^0.1.2",
     "react-native-paper": "^2.15.2",

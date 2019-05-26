@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Text, Button } from "react-native-elements";
+import { Text } from "react-native-elements";
+
+import { Button } from "react-native-paper";
 
 import { View, Alert, StyleSheet, Animated } from "react-native";
 
@@ -32,7 +34,7 @@ function Checkout(props) {
               }
 
               tx.executeSql(
-                `INSERT INTO pct_COMMANDE(Code_Client, Code_Commande, DateCreation, MontantAcompte, nomPoste) VALUES (?, ?, ?, ?, ?)`,
+                `INSERT INTO pct_COMMANDE(Code_Client, Code_Commande, DateCreation, MontantAcompte, nomPoste, ZoneN4, ZoneN5) VALUES (?, ?, ?, ?, ?, ?, ?)`,
                 [
                   props.customer.Code_Client,
                   code_commande,
@@ -41,7 +43,9 @@ function Checkout(props) {
                     .slice(0, 19)
                     .replace("T", " "),
                   price,
-                  "pp01"
+                  "pp01",
+                  props.GPS.latitude,
+                  props.GPS.longitude
                 ]
               );
               props.articles.map((article, i) => {
@@ -115,28 +119,54 @@ function Checkout(props) {
         style={{
           flexDirection: "row",
           alignItems: "center",
-          flex: 0.8,
+          flex: 0.6,
           marginLeft: 10
         }}
       >
-        <FontAwesome5 name="dollar-sign" size={25} color="green" />
-        <Text style={{ color: "green" }} h3>
+        <FontAwesome5 name="dollar-sign" size={25} color="purple" />
+        <Text style={{ color: "purple" }} h3>
           {"  " + price}
         </Text>
       </View>
-      <View style={{ flex: 0.4, justifyContent: "center" }}>
+      <View
+        style={{
+          flex: 0.5,
+          justifyContent: "center",
+          alignItems: "center",
+          marginRight: 5
+        }}
+      >
         <Button
+          mode="outlined"
+          style={{ borderColor: "purple", borderWidth: 2 }}
+          color="purple"
           onPress={() => {
             props.customer && props.articles.length > 0
-              ? saveOrder()
+              ? Alert.alert(
+                  "Confirm your order?",
+                  "",
+
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel"
+                    },
+                    {
+                      text: "Yes",
+                      onPress: () => {
+                        saveOrder();
+                      }
+                    }
+                  ]
+                )
               : Alert.alert(
                   "Please select a client and at least an article in your basket."
                 );
           }}
-          icon={<FontAwesome5 name="shopping-cart" color="white" size={20} />}
-          title="  Checkout"
-          buttonStyle={{ backgroundColor: "green", marginRight: 10 }}
-        />
+        >
+          <FontAwesome5 name="shopping-cart" color="purple" size={15} />{" "}
+          Checkout
+        </Button>
       </View>
     </Animated.View>
   );
@@ -147,6 +177,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     backgroundColor: "white"
+  },
+  checkoutButton: {
+    marginRight: 4,
+    borderWidth: 2,
+    borderColor: "purple",
+    backgroundColor: "white"
   }
 });
 
@@ -155,7 +191,8 @@ Checkout.propTypes = {
   navigation: PropTypes.any,
   customer: PropTypes.any,
   clearOffer: PropTypes.func,
-  emitter: PropTypes.any
+  emitter: PropTypes.any,
+  GPS: PropTypes.object
 };
 
 export default Checkout;

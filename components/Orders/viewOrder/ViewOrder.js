@@ -24,7 +24,7 @@ export default class ViewOrder extends Component {
     DB.getDatabase().then(db => {
       db.transaction(tx => {
         tx.executeSql(
-          `SELECT p.DateCreation, p.Code_Commande,p.MontantAcompte, c.RaisonSociale FROM pct_COMMANDE AS p JOIN CLIENT AS c ON p.Code_Client = c.Code_Client WHERE p.Code_Commande = ?`,
+          `SELECT p.DateCreation, p.Code_Commande,p.MontantAcompte, p.ZoneN4, p.ZoneN5, c.RaisonSociale FROM pct_COMMANDE AS p JOIN CLIENT AS c ON p.Code_Client = c.Code_Client WHERE p.Code_Commande = ?`,
           [this.props.navigation.state.params.Code_Commande],
           (tx, results) => {
             this.setState({ commande: results.rows.item(0) });
@@ -46,6 +46,7 @@ export default class ViewOrder extends Component {
   }
 
   render() {
+    console.log(this.state.commande);
     return this.state.isLoading ? (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
@@ -72,7 +73,7 @@ export default class ViewOrder extends Component {
           </Text>
         </View>
         <View
-          style={{ flexDirection: "row", marginLeft: 10, marginBottom: 20 }}
+          style={{ flexDirection: "row", marginLeft: 10, marginBottom: 10 }}
         >
           <FontAwesome5
             solid
@@ -85,6 +86,26 @@ export default class ViewOrder extends Component {
           />
           <Text style={{ fontSize: 17 }}>
             Client: {this.state.commande.RaisonSociale}
+          </Text>
+        </View>
+        <View
+          style={{ flexDirection: "row", marginLeft: 10, marginBottom: 20 }}
+        >
+          <FontAwesome5
+            solid
+            style={{
+              textAlignVertical: "center",
+              marginLeft: 10,
+              marginRight: 10
+            }}
+            name="globe"
+          />
+          <Text style={{ fontSize: 17 }}>
+            GPS:{" "}
+            {"N: " +
+              this.state.commande.ZoneN4 +
+              " / E: " +
+              this.state.commande.ZoneN5}
           </Text>
         </View>
         <View style={{ flex: 0.8 }}>

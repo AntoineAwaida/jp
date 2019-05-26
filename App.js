@@ -24,11 +24,9 @@ export default class App extends Component {
     DB.getDatabase()
       .then(db => {
         console.log(db);
-        console.log("succès");
       })
       .catch(err => {
         console.log(err);
-        console.log("erreur");
       });
   }
 

@@ -25,6 +25,9 @@ import { DB } from "../../database/database";
 import Customers from "./customers/Customers";
 
 import SelectedCustomer from "./customers/SelectedCustomer";
+import LinearGradient from "react-native-linear-gradient";
+
+import logError from "../Settings/logError";
 
 const EventEmitter = require("events");
 
@@ -65,10 +68,14 @@ class Orders extends Component {
       isBasketModalVisible: false,
       customer: null,
       article: null,
+      GPS: null,
       articles: [],
-      articlesPickOpacity: new Animated.Value(0),
-      ee: new EventEmitter()
+      articlesPickOpacity: new Animated.Value(0)
     };
+
+    this.ee = new EventEmitter();
+    this.ee.setMaxListeners(0);
+
     this.toggleCustomerModal.bind(this);
     this.toggleBasketModal.bind(this);
 
@@ -85,24 +92,24 @@ class Orders extends Component {
     this.keyboardDidShowlistener = Keyboard.addListener(
       "keyboardDidShow",
       () => {
-        this.state.ee.emit("keyboardUp");
+        this.ee.emit("keyboardUp");
       }
     );
 
     this.keyboardDidHidelistener = Keyboard.addListener(
       "keyboardDidHide",
       () => {
-        this.state.ee.emit("keyboardDown");
+        this.ee.emit("keyboardDown");
       }
     );
   }
 
   listenEvents() {
-    this.state.ee.on("editArticles", articles => {
-      this.setState({ articles });
+    this.ee.on("editArticles", articles => {
+      this.setState({ articles: articles, article: null });
     });
 
-    this.state.ee.addListener("customerSelected", () => {
+    this.ee.addListener("customerSelected", () => {
       this.setState({ articlesPickOpacity: new Animated.Value(0) }, () => {
         Animated.timing(this.state.articlesPickOpacity, {
           toValue: 1,
@@ -117,22 +124,37 @@ class Orders extends Component {
     this.keyboardDidHidelistener.remove();
   }
 
+  getCoordinates(high) {
+    navigator.geolocation.getCurrentPosition(
+      res => {
+        console.log(res);
+        const coordinates = {
+          latitude: res.coords.latitude,
+          longitude: res.coords.longitude,
+          speed: res.coords.speed,
+          heading: res.coords.heading
+        };
+        this.setState({ GPS: coordinates });
+      },
+      err => {
+        this.getCoordinates(false);
+        if (high === false) {
+          logError(err.message);
+        }
+      },
+      { enableHighAccuracy: high, timeout: 5000 }
+    );
+  }
+
   componentDidMount() {
     this.listenKeyboard();
     this.listenEvents();
 
-    const { articles, ee } = this.state;
+    const { articles } = this.state;
+    const ee = this.ee;
     this.props.navigation.setParams({ articles, ee });
 
-    navigator.geolocation.getCurrentPosition(
-      res => {
-        console.log(res);
-      },
-      err => {
-        console.log(err);
-      },
-      { enableHighAccuracy: false, timeout: 5000 }
-    );
+    this.getCoordinates(true);
 
     //insérer un article...
     // DB.getDatabase().then(db =>
@@ -218,36 +240,57 @@ class Orders extends Component {
   }
 
   render() {
-    console.log(this.state._keyboardShown);
     return (
-      <SafeAreaView style={style.contain}>
-        <BasketModal
-          article={this.state.article}
-          isVisible={this.state.isBasketModalVisible}
-          ee={this.state.ee}
-          toggleBasketModal={e => this.toggleBasketModal(e)}
-        />
+      <LinearGradient
+        style={{ flex: 1 }}
+        colors={[
+          "rgba(98, 100, 238, .2)",
+          "rgba(250, 225, 208, .4)",
 
-        {!this.state.customer ? (
-          <View style={style.selectCustomercontainer}>
-            <View style={{ flex: 0.1, justifyContent: "center" }}>
-              <Text style={{ fontSize: 20, color: "white" }}>
-                Select a customer.
-              </Text>
-            </View>
+          "rgba(128, 200, 188, .3)"
 
-            <View
-              style={{
-                flex: 1,
+          // "rgba(98, 0,238, .7)",
+          // "rgba(120, 50,238, .6)",
+          // "rgba(120, 50,238, .6)",
+          // "rgba(252, 251,250, .1)"
+        ]}
+      >
+        <SafeAreaView style={style.contain}>
+          <BasketModal
+            article={this.state.article}
+            isVisible={this.state.isBasketModalVisible}
+            ee={this.ee}
+            toggleBasketModal={e => this.toggleBasketModal(e)}
+          />
 
-                flexDirection: "row"
-              }}
-            >
-              <Customers
-                emitter={this.state.ee}
-                selectCustomer={this.selectCustomer}
-              />
-              {/* <View style={{ flex: 0.5 }}>
+          {!this.state.customer ? (
+            <ScrollView style={style.selectCustomercontainer}>
+              <View style={{ flex: 0.1, justifyContent: "center" }}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "Roboto-Bold",
+                    marginLeft: 15,
+                    color: "#6200ee",
+                    marginTop: 15
+                  }}
+                >
+                  SELECT A CUSTOMER.
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+
+                  flexDirection: "row"
+                }}
+              >
+                <Customers
+                  emitter={this.ee}
+                  selectCustomer={this.selectCustomer}
+                />
+                {/* <View style={{ flex: 0.5 }}>
                   <Button
                     icon={<Icon name="search" size={27} color="white" />}
                     title=" Search"
@@ -262,49 +305,51 @@ class Orders extends Component {
                     }
                   />
                 </View> */}
-            </View>
-          </View>
-        ) : (
-          <Animated.View
-            style={{ flex: 1, opacity: this.state.articlesPickOpacity }}
-          >
-            <View style={style.selectCustomercontainer}>
-              <View style={style.customerContainer}>
-                <SelectedCustomer
-                  customer={this.state.customer}
-                  cancelCustomer={this.cancelCustomer}
-                />
               </View>
-              <View style={style.shoppingCardContainer}>
-                {/* <View style={style.listArticles}>
+            </ScrollView>
+          ) : (
+            <Animated.View
+              style={{ flex: 1, opacity: this.state.articlesPickOpacity }}
+            >
+              <ScrollView style={style.selectCustomercontainer}>
+                <View style={style.customerContainer}>
+                  <SelectedCustomer
+                    customer={this.state.customer}
+                    cancelCustomer={this.cancelCustomer}
+                  />
+                </View>
+                <View style={style.shoppingCardContainer}>
+                  {/* <View style={style.listArticles}>
                 <ArticlesList
                   deleteArticle={e => this.deleteArticle(e)}
                   articles={this.state.articles}
                 />
               </View> */}
-                <View style={style.pickArticles}>
-                  <ArticlesPick
+                  <View style={style.pickArticles}>
+                    <ArticlesPick
+                      articles={this.state.articles}
+                      ee={this.ee}
+                      toggleBasketModal={e => this.toggleBasketModal(e)}
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+              {
+                <View style={{ flex: 0.1 }}>
+                  <Checkout
+                    emitter={this.ee}
+                    clearOffer={() => this.clearOffer()}
                     articles={this.state.articles}
-                    ee={this.state.ee}
-                    toggleBasketModal={e => this.toggleBasketModal(e)}
+                    navigation={this.props.navigation}
+                    customer={this.state.customer}
+                    GPS={this.state.GPS}
                   />
                 </View>
-              </View>
-            </View>
-            {
-              <View style={{ flex: 0.1 }}>
-                <Checkout
-                  emitter={this.state.ee}
-                  clearOffer={() => this.clearOffer()}
-                  articles={this.state.articles}
-                  navigation={this.props.navigation}
-                  customer={this.state.customer}
-                />
-              </View>
-            }
-          </Animated.View>
-        )}
-      </SafeAreaView>
+              }
+            </Animated.View>
+          )}
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 }
@@ -315,13 +360,15 @@ Orders.propTypes = {
 
 const style = StyleSheet.create({
   contain: {
-    flex: 1,
-    backgroundColor: "rgba(98, 0, 238, .8)"
+    flex: 1
   },
   customerContainer: {
     flex: 0.2,
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
+    backgroundColor: "white",
+    borderBottomWidth: 3,
+    borderBottomColor: "purple"
   },
 
   shoppingCardContainer: {

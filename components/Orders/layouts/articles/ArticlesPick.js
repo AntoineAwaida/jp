@@ -61,7 +61,13 @@ export default class ArticlesPick extends Component {
             let data = [];
             for (let i = 0; i < results.rows.length; i++) {
               //on n'ajoute pas l'article aux résultats possibles s'il est déjà dans le panier
-              data.push(results.rows.item(i));
+              let article = results.rows.item(i);
+              if (i % 2 == 0) {
+                article.color = "grey";
+              } else {
+                article.color = "purple";
+              }
+              data.push(article);
             }
 
             this.setState({ availableArticles: data, isLoading: false }, () => {
@@ -73,9 +79,8 @@ export default class ArticlesPick extends Component {
     });
   }
   render() {
-    const colors = ["grey", "orange", "red", "green", "#571db2"];
     return (
-      <ScrollView>
+      <View>
         <View>
           {this.state.isLoading ? (
             <View
@@ -92,7 +97,7 @@ export default class ArticlesPick extends Component {
               <SearchBar
                 inputContainerStyle={{
                   backgroundColor: "white",
-                  borderRadius: 50
+                  borderRadius: 15
                 }}
                 containerStyle={{
                   backgroundColor: "transparent",
@@ -113,7 +118,7 @@ export default class ArticlesPick extends Component {
                           opacity: _.find(this.props.articles, article)
                             ? 0.3
                             : 1,
-                          backgroundColor: colors[index % colors.length]
+                          backgroundColor: article.color
                         }
                       ]}
                     >
@@ -123,20 +128,10 @@ export default class ArticlesPick extends Component {
                         }
                         onPress={() => this.selectArticle(article)}
                       >
-                        <Text
-                          style={{
-                            color: "white",
-                            textAlign: "center"
-                          }}
-                        >
+                        <Text style={styles.textArticle}>
                           {article.Designation}
                         </Text>
-                        <Text
-                          style={{
-                            color: "white",
-                            textAlign: "center"
-                          }}
-                        >
+                        <Text style={styles.textArticle}>
                           {article.Code_Article.slice(-4)}
                         </Text>
                       </TouchableOpacity>
@@ -147,7 +142,7 @@ export default class ArticlesPick extends Component {
             </View>
           )}
         </View>
-      </ScrollView>
+      </View>
     );
   }
 }
@@ -162,7 +157,8 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
     flexWrap: "wrap",
-    flexDirection: "row"
+    flexDirection: "row",
+    marginLeft: 10
   },
   articleContainer: {
     height: 100,
@@ -174,5 +170,10 @@ const styles = StyleSheet.create({
     opacity: 1,
     justifyContent: "center",
     borderRadius: 5
+  },
+  textArticle: {
+    color: "white",
+    textAlign: "center",
+    fontFamily: "Roboto-Thin"
   }
 });
