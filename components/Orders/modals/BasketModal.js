@@ -13,7 +13,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 
 function isNormalInteger(str) {
   var n = Math.floor(Number(str));
-  return n !== Infinity && String(n) === str && n != 0;
+  return n !== Infinity && String(n) === str;
 }
 
 class BasketModal extends React.Component {
@@ -23,7 +23,7 @@ class BasketModal extends React.Component {
       isLoading: false,
       search: null,
       errorQuantity: false,
-      quantity: null,
+      quantity: 1,
       article: null
     };
     this.boundSelectArticle = e => this.selectArticle(e);
@@ -31,6 +31,15 @@ class BasketModal extends React.Component {
 
   selectArticle(article) {
     this.setState({ article: article });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.article != this.props.article) {
+      this.props.article &&
+        (this.props.article.quantity
+          ? this.setState({ quantity: this.props.article.quantity })
+          : this.setState({ quantity: 1 }));
+    }
   }
 
   componentDidMount() {
@@ -44,37 +53,40 @@ class BasketModal extends React.Component {
 
   handleQuantity = e => {
     if (isNormalInteger(e)) {
-      this.setState({ quantity: parseInt(e), errorQuantity: false });
+      console.log("nomral");
+      console.log(e);
+      console.log(parseInt(e));
+      if (e != "0") {
+        this.setState({ quantity: parseInt(e), errorQuantity: false });
+      } else {
+        this.setState({ quantity: 0, errorQuantity: false });
+      }
     } else {
-      this.setState({ quantity: null, errorQuantity: true });
+      this.setState({ quantity: "", errorQuantity: true });
     }
   };
 
   chooseArticle() {
     const article = { ...this.state.article, quantity: this.state.quantity };
-    this.setState({ quantity: null }, () => {
+    this.setState({ quantity: 1 }, () => {
       this.props.toggleBasketModal(article);
     });
   }
 
   incQuantity() {
-    if (this.state.quantity) {
-      this.setState({ quantity: this.state.quantity + 1 }, () => {
-        this.state.quantity;
-      });
+    if (this.state.quantity || this.state.quantity == 0) {
+      this.setState({ quantity: this.state.quantity + 1 });
     }
   }
 
   decQuantity() {
-    if (this.state.quantity) {
-      this.setState({ quantity: this.state.quantity - 1 }, () => {
-        this.state.quantity;
-      });
+    if (this.state.quantity || this.state.quantity == 0) {
+      this.setState({ quantity: this.state.quantity - 1 });
     }
   }
 
   closeModal() {
-    this.setState({ quantity: null }, () => this.props.toggleBasketModal());
+    this.setState({ quantity: 1 }, () => this.props.toggleBasketModal());
   }
 
   render() {
@@ -146,7 +158,9 @@ class BasketModal extends React.Component {
             <View style={{ flex: 1 }} />
             <View style={{ flex: 2 }}>
               <Input
-                value={this.state.quantity && this.state.quantity.toString()}
+                value={
+                  !isNaN(this.state.quantity) && String(this.state.quantity)
+                }
                 keyboardType="numeric"
                 placeholder="quantity..."
                 onChangeText={e => this.handleQuantity(e)}
@@ -156,7 +170,15 @@ class BasketModal extends React.Component {
                     : null
                 }
               />
-              <Text>
+              <Text
+                style={{
+                  color: this.state.article
+                    ? this.state.article.StockDepot - this.state.quantity < 0
+                      ? "red"
+                      : "black"
+                    : "black"
+                }}
+              >
                 {"\n"}
                 Remaining:{" "}
                 {this.state.article &&

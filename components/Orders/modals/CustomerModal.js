@@ -8,6 +8,7 @@ import { FlatList } from "react-native-gesture-handler";
 import PropTypes from "prop-types";
 import { DB } from "../../../database/database";
 import { ActivityIndicator } from "react-native-paper";
+import logError from "../../Settings/logError";
 
 class CustomerModal extends Component {
   constructor(props, context) {
@@ -21,21 +22,25 @@ class CustomerModal extends Component {
 
   getCustomers(text) {
     this.setState({ isLoading: true, search: text }, () => {
-      DB.getDatabase().then(db => {
-        db.transaction(tx => {
-          tx.executeSql(
-            `SELECT * FROM CLIENT WHERE RaisonSociale LIKE '%${text}%'`,
-            [],
-            (tx, results) => {
-              let data = [];
-              for (let i = 0; i < results.rows.length; i++) {
-                data.push(results.rows.item(i));
+      DB.getDatabase()
+        .then(db => {
+          db.transaction(tx => {
+            tx.executeSql(
+              `SELECT * FROM CLIENT WHERE RaisonSociale LIKE '%${text}%'`,
+              [],
+              (tx, results) => {
+                let data = [];
+                for (let i = 0; i < results.rows.length; i++) {
+                  data.push(results.rows.item(i));
+                }
+                this.setState({ matchingCustomers: data, isLoading: false });
               }
-              this.setState({ matchingCustomers: data, isLoading: false });
-            }
-          );
+            );
+          });
+        })
+        .catch(err => {
+          logError(err);
         });
-      });
     });
   }
 

@@ -7,6 +7,7 @@ import { FlatList, ScrollView } from "react-native-gesture-handler";
 import { ListItem } from "react-native-elements";
 
 import PropTypes from "prop-types";
+import logError from "../../Settings/logError";
 
 export default class ListOrders extends Component {
   static navigationOptions = {
@@ -22,21 +23,25 @@ export default class ListOrders extends Component {
   }
 
   componentDidMount() {
-    DB.getDatabase().then(db => {
-      db.transaction(tx => {
-        tx.executeSql(
-          `SELECT p.DateCreation, p.Code_Commande,p.MontantAcompte, c.RaisonSociale FROM pct_COMMANDE AS p JOIN CLIENT AS c ON p.Code_Client = c.Code_Client`,
-          [],
-          (tx, results) => {
-            let data = [];
-            for (let i = 0; i < results.rows.length; i++) {
-              data.push(results.rows.item(i));
+    DB.getDatabase()
+      .then(db => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `SELECT p.DateCreation, p.Code_Commande,p.MontantAcompte, c.RaisonSociale FROM pct_COMMANDE AS p JOIN CLIENT AS c ON p.Code_Client = c.Code_Client`,
+            [],
+            (tx, results) => {
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              this.setState({ commandes: data, isLoading: false });
             }
-            this.setState({ commandes: data, isLoading: false });
-          }
-        );
+          );
+        });
+      })
+      .catch(err => {
+        logError(err);
       });
-    });
   }
   renderSeparator = () => {
     return (

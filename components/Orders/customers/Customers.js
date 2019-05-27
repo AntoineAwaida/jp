@@ -10,6 +10,7 @@ import { DB } from "../../../database/database";
 import { ActivityIndicator } from "react-native-paper";
 
 import LinearGradient from "react-native-linear-gradient";
+import logError from "../../Settings/logError";
 
 class Customers extends Component {
   constructor(props, context) {
@@ -34,21 +35,28 @@ class Customers extends Component {
       if (text.length > 1) {
         const searchtext = text.replace(/'/g, "&quot;");
         this.setState({ isLoading: true }, () => {
-          DB.getDatabase().then(db => {
-            db.transaction(tx => {
-              tx.executeSql(
-                `SELECT * FROM CLIENT WHERE RaisonSociale LIKE '%${searchtext}%'`,
-                [],
-                (tx, results) => {
-                  let data = [];
-                  for (let i = 0; i < results.rows.length; i++) {
-                    data.push(results.rows.item(i));
+          DB.getDatabase()
+            .then(db => {
+              db.transaction(tx => {
+                tx.executeSql(
+                  `SELECT * FROM CLIENT WHERE RaisonSociale LIKE '%${searchtext}%'`,
+                  [],
+                  (tx, results) => {
+                    let data = [];
+                    for (let i = 0; i < results.rows.length; i++) {
+                      data.push(results.rows.item(i));
+                    }
+                    this.setState({
+                      matchingCustomers: data,
+                      isLoading: false
+                    });
                   }
-                  this.setState({ matchingCustomers: data, isLoading: false });
-                }
-              );
+                );
+              });
+            })
+            .catch(err => {
+              logError(err);
             });
-          });
         });
       } else {
         this.setState({ matchingCustomers: [] });

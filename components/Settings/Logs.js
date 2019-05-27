@@ -8,7 +8,9 @@ import { ScrollView, FlatList } from "react-native-gesture-handler";
 
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 
-export default class Logs extends Component {
+import PropTypes from "prop-types";
+
+class Logs extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
     return {
@@ -91,3 +93,9 @@ export default class Logs extends Component {
     );
   }
 }
+
+Logs.propTypes = {
+  navigation: PropTypes.any
+};
+
+export default Logs;

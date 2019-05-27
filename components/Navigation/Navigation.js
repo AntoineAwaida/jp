@@ -19,6 +19,7 @@ import Logs from "../Settings/Logs";
 import React from "react";
 
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import Logout from "../Logout/Logout";
 
 const OrderNavigator = createStackNavigator(
   {
@@ -58,15 +59,37 @@ const TabNavigator = createBottomTabNavigator(
       screen: OrderNavigator
     },
 
-    Map: {
-      screen: Map
-    },
+    // Map: {
+    //   screen: Map
+    // },
 
     Sync: {
       screen: Sync
+    },
+
+    Logout: {
+      screen: Logout
     }
   },
   {
+    defaultNavigationOptions: ({ navigation }) => ({
+      tabBarIcon: ({ focused, horizontal, tintColor }) => {
+        let IconComponent = FontAwesome5;
+        const { routeName } = navigation.state;
+        if (routeName === "Orders") {
+          iconName = "list-alt";
+        } else if (routeName === "Map") {
+          iconName = "map-signs";
+        } else if (routeName === "Sync") {
+          iconName = "sync-alt";
+        } else {
+          iconName = "sign-out-alt";
+        }
+
+        return <IconComponent name={iconName} size={25} color={tintColor} />;
+      }
+    }),
+
     tabBarOptions: {
       activeBackgroundColor: "purple",
       activeTintColor: "white",
@@ -82,9 +105,9 @@ const TabAdminNavigator = createBottomTabNavigator(
       screen: OrderNavigator
     },
 
-    Map: {
-      screen: Map
-    },
+    // Map: {
+    //   screen: Map
+    // },
 
     Sync: {
       screen: Sync
@@ -92,6 +115,10 @@ const TabAdminNavigator = createBottomTabNavigator(
 
     Settings: {
       screen: SettingsNavigator
+    },
+
+    Logout: {
+      screen: Logout
     }
   },
   {
@@ -105,8 +132,10 @@ const TabAdminNavigator = createBottomTabNavigator(
           iconName = "map-signs";
         } else if (routeName === "Sync") {
           iconName = "sync-alt";
-        } else {
+        } else if (routeName === "Settings") {
           iconName = "cog";
+        } else {
+          iconName = "sign-out-alt";
         }
 
         return <IconComponent name={iconName} size={25} color={tintColor} />;

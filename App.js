@@ -11,6 +11,7 @@ import React, { Component } from "react";
 import Navigation from "./components/Navigation/Navigation";
 import { ActivityIndicator } from "react-native-paper";
 import { DB } from "./database/database";
+import logError from "./components/Settings/logError";
 
 export default class App extends Component {
   constructor(props, context) {
@@ -27,6 +28,7 @@ export default class App extends Component {
       })
       .catch(err => {
         console.log(err);
+        logError(err.message);
       });
   }
 
@@ -51,9 +53,10 @@ export default class App extends Component {
         this.setState({ granted: "granted" });
       } else {
         this.setState({ granted: "no" });
+        //demander à nouveau si échec?
       }
     } catch (err) {
-      console.warn(err);
+      logError(err.message);
     }
   }
 

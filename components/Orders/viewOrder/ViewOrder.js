@@ -10,6 +10,7 @@ import { ActivityIndicator } from "react-native-paper";
 
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import { FlatList } from "react-native-gesture-handler";
+import logError from "../../Settings/logError";
 
 export default class ViewOrder extends Component {
   constructor(props, context) {
@@ -21,28 +22,32 @@ export default class ViewOrder extends Component {
   }
 
   componentDidMount() {
-    DB.getDatabase().then(db => {
-      db.transaction(tx => {
-        tx.executeSql(
-          `SELECT p.DateCreation, p.Code_Commande,p.MontantAcompte, p.ZoneN4, p.ZoneN5, c.RaisonSociale FROM pct_COMMANDE AS p JOIN CLIENT AS c ON p.Code_Client = c.Code_Client WHERE p.Code_Commande = ?`,
-          [this.props.navigation.state.params.Code_Commande],
-          (tx, results) => {
-            this.setState({ commande: results.rows.item(0) });
-          }
-        );
-        tx.executeSql(
-          "SELECT t.Quantite, a.Code_Article, t.PrixUnitaire, a.Designation FROM pct_COMMANDEcomposition AS t JOIN Article AS a ON t.Code_Article = a.Code_Article WHERE t.Code_Commande = ?",
-          [this.props.navigation.state.params.Code_Commande],
-          (tx, results) => {
-            let data = [];
-            for (let i = 0; i < results.rows.length; i++) {
-              data.push(results.rows.item(i));
+    DB.getDatabase()
+      .then(db => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `SELECT p.DateCreation, p.Code_Commande,p.MontantAcompte, p.ZoneN4, p.ZoneN5, c.RaisonSociale FROM pct_COMMANDE AS p JOIN CLIENT AS c ON p.Code_Client = c.Code_Client WHERE p.Code_Commande = ?`,
+            [this.props.navigation.state.params.Code_Commande],
+            (tx, results) => {
+              this.setState({ commande: results.rows.item(0) });
             }
-            this.setState({ composition: data, isLoading: false });
-          }
-        );
+          );
+          tx.executeSql(
+            "SELECT t.Quantite, a.Code_Article, t.PrixUnitaire, a.Designation FROM pct_COMMANDEcomposition AS t JOIN Article AS a ON t.Code_Article = a.Code_Article WHERE t.Code_Commande = ?",
+            [this.props.navigation.state.params.Code_Commande],
+            (tx, results) => {
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              this.setState({ composition: data, isLoading: false });
+            }
+          );
+        });
+      })
+      .catch(err => {
+        logError(err);
       });
-    });
   }
 
   render() {

@@ -9,6 +9,7 @@ import PropTypes from "prop-types";
 import _ from "lodash";
 import { ActivityIndicator } from "react-native-paper";
 import { SearchBar } from "react-native-elements";
+import logError from "../../../Settings/logError";
 
 export default class ArticlesPick extends Component {
   constructor(props, context) {
@@ -49,34 +50,41 @@ export default class ArticlesPick extends Component {
   }
 
   async componentDidMount() {
-    DB.getDatabase().then(db => {
-      db.transaction(tx => {
-        tx.executeSql(
-          `SELECT * FROM (ArticleDepot AS d JOIN Article AS a 
+    DB.getDatabase()
+      .then(db => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `SELECT * FROM (ArticleDepot AS d JOIN Article AS a 
                 ON d.Code_Article = a.Code_Article) AS t 
                 JOIN TARIFarticlePrix AS x
                 ON t.Code_Article = x.Code_Article`,
-          [],
-          (tx, results) => {
-            let data = [];
-            for (let i = 0; i < results.rows.length; i++) {
-              //on n'ajoute pas l'article aux résultats possibles s'il est déjà dans le panier
-              let article = results.rows.item(i);
-              if (i % 2 == 0) {
-                article.color = "grey";
-              } else {
-                article.color = "purple";
+            [],
+            (tx, results) => {
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                //on n'ajoute pas l'article aux résultats possibles s'il est déjà dans le panier
+                let article = results.rows.item(i);
+                if (i % 2 == 0) {
+                  article.color = "grey";
+                } else {
+                  article.color = "purple";
+                }
+                data.push(article);
               }
-              data.push(article);
-            }
 
-            this.setState({ availableArticles: data, isLoading: false }, () => {
-              this.searchArticle("");
-            });
-          }
-        );
+              this.setState(
+                { availableArticles: data, isLoading: false },
+                () => {
+                  this.searchArticle("");
+                }
+              );
+            }
+          );
+        });
+      })
+      .catch(err => {
+        logError(err);
       });
-    });
   }
   render() {
     return (

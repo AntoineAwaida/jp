@@ -29,14 +29,20 @@ import LinearGradient from "react-native-linear-gradient";
 
 import logError from "../Settings/logError";
 
+import withBadge from "./withBadge";
+import createTable from "./createTable";
+
 const EventEmitter = require("events");
 
 class Orders extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params = {} } = navigation.state;
+    let BadgedIcon;
+    params.articles &&
+      (BadgedIcon = withBadge(params.articles.length)(FontAwesome5));
     return {
       headerLeft: params.articles && params.articles.length > 0 && (
-        <FontAwesome5
+        <BadgedIcon
           style={{ marginLeft: 10 }}
           color="#6200ee"
           name="shopping-cart"
@@ -85,7 +91,10 @@ class Orders extends Component {
   }
 
   clearOffer() {
-    this.setState({ customer: null, articles: [] });
+    this.setState({ customer: null, articles: [], article: null }, () => {
+      const { articles } = this.state;
+      this.props.navigation.setParams({ articles });
+    });
   }
 
   listenKeyboard() {
@@ -159,6 +168,15 @@ class Orders extends Component {
 
     this.getCoordinates(true);
 
+    DB.getDatabase().then(db =>
+      db.transaction(tx => {
+        tx.executeSql(`SELECT * FROM Tournee`, [], (tx, results) => {
+          console.log(results.rows.item(0));
+        });
+      })
+    );
+
+    //createTable();
     //insérer un article...
     // DB.getDatabase().then(db =>
     //   db.transaction(tx => {

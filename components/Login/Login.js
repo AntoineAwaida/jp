@@ -14,12 +14,14 @@ import BottomMessage from "../Layout/Alert/bottomMessage";
 import PropTypes from "prop-types";
 
 import AsyncStorage from "@react-native-community/async-storage";
+import logError from "../Settings/logError";
 
 class Login extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
       username: null,
+      password: null,
       error: false,
       message: null,
       isLoading: false,
@@ -34,7 +36,10 @@ class Login extends Component {
 
     user
       ? this.props.navigation.navigate(
-          JSON.parse(user).Code_Groupe === "ADMIN" ? "MainAdmin" : "Main"
+          JSON.parse(user).Code_Groupe === "ADMIN" ||
+            JSON.parse(user).name === "Admin"
+            ? "MainAdmin"
+            : "Main"
         )
       : this.setState({ isRetrievingUser: false });
   }
@@ -42,52 +47,80 @@ class Login extends Component {
   changeUsername(e) {
     this.setState({ username: e, error: false });
   }
+  changePassword(e) {
+    this.setState({ password: e, error: false });
+  }
 
   async _fillAsyncStorage(data) {
+    const tournee = {
+      Code: Date.now(),
+      DateDebut: new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ")
+    };
     await AsyncStorage.setItem("user", JSON.stringify(data));
+    await AsyncStorage.setItem("tournee", JSON.stringify(tournee));
   }
 
   async _login() {
     this.setState({ isLoading: true }, () => {
-      DB.getDatabase()
-        .then(db => {
-          db.transaction(tx => {
-            tx.executeSql(
-              `SELECT Nom, Code_Utilisateur, Code_Groupe FROM zz_Util WHERE Nom = ? `,
-              [this.state.username],
-              async (tx, results) => {
-                if (results.rows.length > 0) {
-                  await this._fillAsyncStorage(results.rows.item(0));
-                  this.setState({ isLoading: false });
-                  this.props.navigation.navigate(
-                    results.rows.item(0).Code_Groupe === "ADMIN"
-                      ? "MainAdmin"
-                      : "Main"
-                  );
-                } else {
-                  this.setState(
-                    {
-                      error: true,
-                      isLoading: false,
-                      message: "Wrong username!"
-                    },
-                    () => {
-                      this._emitter.emit("trigger-message");
+      this.state.username !== "Admin"
+        ? DB.getDatabase()
+            .then(db => {
+              db.transaction(tx => {
+                tx.executeSql(
+                  `SELECT Nom, Code_Utilisateur, Code_Groupe FROM zz_Util WHERE Nom = ? `,
+                  [this.state.username],
+                  async (tx, results) => {
+                    if (results.rows.length > 0) {
+                      await this._fillAsyncStorage(results.rows.item(0));
+                      this.setState({ isLoading: false });
+                      this.props.navigation.navigate(
+                        results.rows.item(0).Code_Groupe === "ADMIN"
+                          ? "MainAdmin"
+                          : "Main"
+                      );
+                    } else {
+                      this.setState(
+                        {
+                          error: true,
+                          isLoading: false,
+                          message: "Wrong username or password!"
+                        },
+                        () => {
+                          this._emitter.emit("trigger-message");
+                        }
+                      );
                     }
-                  );
-                }
-              }
-            );
-          });
-        })
-        .catch(err => {
-          console.log(err);
-          this.setState({
-            isLoading: false,
-            error: true,
-            message: "Unable to access the database."
-          });
-        });
+                  }
+                );
+              });
+            })
+            .catch(err => {
+              logError(err);
+              this.setState({
+                isLoading: false,
+                error: true,
+                message: "Unable to access the database."
+              });
+            })
+        : this.state.password === "ecbxv"
+        ? this._fillAsyncStorage({ name: "Admin" }).then(() => {
+            this.setState({ isLoading: false }, () => {
+              this.props.navigation.navigate("MainAdmin");
+            });
+          })
+        : this.setState(
+            {
+              error: true,
+              isLoading: false,
+              message: "Wrong username or password!"
+            },
+            () => {
+              this._emitter.emit("trigger-message");
+            }
+          );
     });
   }
 
@@ -115,6 +148,7 @@ class Login extends Component {
               }
             />
             <Input
+              onChangeText={e => this.changePassword(e)}
               shake={true}
               name="password"
               placeholder="Password"

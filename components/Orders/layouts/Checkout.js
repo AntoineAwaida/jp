@@ -12,88 +12,112 @@ import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import save from "../saveOrder";
 import { DB } from "../../../database/database";
 
+import AsyncStorage from "@react-native-community/async-storage";
+import getPrice from "./getPrice";
+import logError from "../../Settings/logError";
+
 function Checkout(props) {
   const [price, setPrice] = useState(0);
   const [code, setCode] = useState(0);
 
   const [bottomPosition, setbottomPosition] = useState(new Animated.Value(0));
 
-  function saveOrder() {
+  async function saveOrder() {
     let latitude = null;
     let longitude = null;
 
-    props.GPS &&
-      ((latitude = props.GPS.latitude), (longitude = props.GPS.longitude));
+    let credentials = await AsyncStorage.getItem("credentials");
 
-    DB.getDatabase()
-      .then(db => {
-        db.transaction(tx => {
-          tx.executeSql(
-            `SELECT Code_Commande FROM pct_COMMANDE ORDER BY Code_Commande DESC limit 1`,
-            [],
-            (tx, results) => {
-              let code_commande = 0;
+    credentials = await JSON.parse(credentials);
 
-              if (results.rows.length > 0) {
-                code_commande = results.rows.item(0)["Code_Commande"] + 1;
-                setCode(code_commande);
-              }
+    const depot = credentials.depot;
 
-              tx.executeSql(
-                `INSERT INTO pct_COMMANDE(Code_Client, Code_Commande, DateCreation, MontantAcompte, nomPoste, ZoneN4, ZoneN5) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [
-                  props.customer.Code_Client,
-                  code_commande,
-                  new Date()
-                    .toISOString()
-                    .slice(0, 19)
-                    .replace("T", " "),
-                  price,
-                  "pp01",
-                  latitude,
-                  longitude
-                ]
-              );
-              props.articles.map((article, i) => {
-                tx.executeSql(
-                  `INSERT INTO pct_COMMANDEcomposition(Code_Commande, Code_Article, Quantite, PrixUnitaire, NumLigne, nomPoste) VALUES (?, ?, ?, ?, ?, ?)`,
-                  [
-                    code_commande,
-                    article.Code_Article,
-                    article.quantity,
-                    article.PrixUnitaire,
-                    i,
-                    "pp01"
-                  ]
-                );
-              });
-              props.articles.map(article => {
-                tx.executeSql(
-                  `UPDATE ArticleDepot SET StockDepot=? WHERE Code_Article=?`,
-                  [article.StockDepot - article.quantity, article.Code_Article]
-                );
-              });
-            }
-          );
-        });
-      })
-      .then(() => {
-        DB.getDatabase().then(db => {
+    if (depot) {
+      props.GPS &&
+        ((latitude = props.GPS.latitude), (longitude = props.GPS.longitude));
+
+      DB.getDatabase()
+        .then(db => {
           db.transaction(tx => {
             tx.executeSql(
               `SELECT Code_Commande FROM pct_COMMANDE ORDER BY Code_Commande DESC limit 1`,
               [],
               (tx, results) => {
-                code_commande = results.rows.item(0)["Code_Commande"];
-                props.navigation.navigate("ViewOrder", {
-                  Code_Commande: code_commande
+                let code_commande = 0;
+
+                if (results.rows.length > 0) {
+                  code_commande = results.rows.item(0)["Code_Commande"] + 1;
+                  setCode(code_commande);
+                }
+
+                tx.executeSql(
+                  `INSERT INTO pct_COMMANDE(Code_Client, Code_Commande, DateCreation, MontantAcompte, nomPoste, ZoneN4, ZoneN5) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                  [
+                    props.customer.Code_Client,
+                    code_commande,
+                    new Date()
+                      .toISOString()
+                      .slice(0, 19)
+                      .replace("T", " "),
+                    price,
+                    depot,
+                    latitude,
+                    longitude
+                  ]
+                );
+
+                props.articles.map((article, i) => {
+                  tx.executeSql(
+                    `INSERT INTO pct_COMMANDEcomposition(Code_Commande, Code_Article, Quantite, PrixUnitaire, NumLigne, nomPoste) VALUES (?, ?, ?, ?, ?, ?)`,
+                    [
+                      code_commande,
+                      article.Code_Article,
+                      article.quantity,
+                      article.PrixUnitaire,
+                      i,
+                      depot
+                    ]
+                  );
                 });
-                props.clearOffer();
+                props.articles.map(article => {
+                  tx.executeSql(
+                    `UPDATE ArticleDepot SET StockDepot=? WHERE Code_Article=?`,
+                    [
+                      article.StockDepot - article.quantity,
+                      article.Code_Article
+                    ]
+                  );
+                });
               }
             );
           });
+        })
+        .catch(err => {
+          logError(err);
+        })
+        .then(() => {
+          DB.getDatabase().then(db => {
+            db.transaction(tx => {
+              tx.executeSql(
+                `SELECT Code_Commande FROM pct_COMMANDE ORDER BY Code_Commande DESC limit 1`,
+                [],
+                (tx, results) => {
+                  code_commande = results.rows.item(0)["Code_Commande"];
+                  props.navigation.navigate("ViewOrder", {
+                    Code_Commande: code_commande
+                  });
+                  props.clearOffer();
+                }
+              );
+            });
+          });
+        })
+        .catch(err => {
+          logError(err);
         });
-      });
+    } else {
+      Alert.alert("Please select a depot in the settings first!");
+    }
   }
 
   props.emitter.addListener("keyboardUp", () => {
@@ -111,10 +135,7 @@ function Checkout(props) {
   });
 
   useEffect(() => {
-    let total_price = 0;
-    props.articles.map(article => {
-      total_price += article.quantity * article.PrixUnitaire;
-    });
+    const total_price = getPrice(props.articles);
 
     setPrice(total_price);
   });

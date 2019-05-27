@@ -27,39 +27,35 @@ class Settings extends Component {
       connSuccessful: null,
       message: null,
       error: null,
-      name: null,
+      server: null,
+      username: null,
+      database: null,
       password: null,
+      port: null,
       depot: null
     };
     this._emitter = new EventEmitter();
     this._emitter.setMaxListeners(0);
 
-    this.changeName = this.changeName.bind(this);
+    this.changeDatabase = this.changeDatabase.bind(this);
+    this.changeServer = this.changeServer.bind(this);
+    this.changeUsername = this.changeUsername.bind(this);
     this.changePassword = this.changePassword.bind(this);
     this.changeDepot = this.changeDepot.bind(this);
+    this.changePort = this.changePort.bind(this);
   }
 
   async componentDidMount() {
     let credentials = await AsyncStorage.getItem("credentials");
-    console.log(credentials);
     if (credentials) {
       credentials = await JSON.parse(credentials);
       this.setState({
-        name: credentials.name,
+        server: credentials.server,
+        username: credentials.username,
         password: credentials.password,
+        database: credentials.database,
         depot: credentials.depot
       });
-    }
-  }
-
-  async provokeError() {
-    try {
-      test = ["article", "test"];
-      for (let i = 0; i < test.length + 3; i++) {
-        console.log(test[i].name);
-      }
-    } catch (e) {
-      logError(e);
     }
   }
 
@@ -71,6 +67,7 @@ class Settings extends Component {
           this.setState({ isTesting: false, connSuccessful: true });
         })
         .catch(err => {
+          logError(err);
           console.log(err);
           this.setState(
             {
@@ -89,8 +86,11 @@ class Settings extends Component {
 
   async saveSettings() {
     await logCredentials(
-      this.state.name,
+      this.state.server,
+      this.state.username,
       this.state.password,
+      this.state.database,
+      this.state.port,
       this.state.depot
     );
     this.setState(
@@ -101,12 +101,24 @@ class Settings extends Component {
     );
   }
 
-  changeName(name) {
-    this.setState({ name: name });
+  changePort(port) {
+    this.setState({ port: port });
+  }
+
+  changeUsername(name) {
+    this.setState({ username: name });
   }
 
   changePassword(password) {
     this.setState({ password: password });
+  }
+
+  changeServer(server) {
+    this.setState({ server: server });
+  }
+
+  changeDatabase(database) {
+    this.setState({ database: database });
   }
 
   changeDepot(depot) {
@@ -130,10 +142,30 @@ class Settings extends Component {
             <View style={style.container}>
               <View style={style.form}>
                 <Input
-                  onChangeText={this.changeName}
-                  value={this.state.name}
-                  placeholder="Name"
-                  name="Name"
+                  onChangeText={this.changeServer}
+                  value={this.state.server}
+                  placeholder="Server"
+                  name="Server"
+                  clearTextOnFocus={true}
+                  inputContainerStyle={style.dividerStyle}
+                  textContentType="username"
+                  placeholderTextColor="#6200ee"
+                  selectionColor="grey"
+                  inputStyle={{ color: "#6200ee", marginLeft: 15 }}
+                  leftIcon={
+                    <Icon
+                      type="font-awesome"
+                      name="user"
+                      size={20}
+                      color="white"
+                    />
+                  }
+                />
+                <Input
+                  onChangeText={this.changeUsername}
+                  value={this.state.username}
+                  placeholder="Username"
+                  name="Username"
                   clearTextOnFocus={true}
                   inputContainerStyle={style.dividerStyle}
                   textContentType="username"
@@ -164,6 +196,47 @@ class Settings extends Component {
                   leftIcon={<FontAwesome5 name="key" size={20} color="white" />}
                 />
                 <Input
+                  onChangeText={this.changeDatabase}
+                  value={this.state.database}
+                  placeholder="Database"
+                  name="Database"
+                  clearTextOnFocus={true}
+                  inputContainerStyle={style.dividerStyle}
+                  textContentType="username"
+                  placeholderTextColor="#6200ee"
+                  selectionColor="grey"
+                  inputStyle={{ color: "#6200ee", marginLeft: 15 }}
+                  leftIcon={
+                    <Icon
+                      type="font-awesome"
+                      name="user"
+                      size={20}
+                      color="white"
+                    />
+                  }
+                />
+                <Input
+                  onChangeText={this.changePort}
+                  value={this.state.port}
+                  keyboardType="numeric"
+                  placeholder="Port"
+                  name="port"
+                  clearTextOnFocus={true}
+                  inputContainerStyle={style.dividerStyle}
+                  textContentType="username"
+                  placeholderTextColor="#6200ee"
+                  selectionColor="grey"
+                  inputStyle={{ color: "#6200ee", marginLeft: 15 }}
+                  leftIcon={
+                    <Icon
+                      type="font-awesome"
+                      name="user"
+                      size={20}
+                      color="white"
+                    />
+                  }
+                />
+                <Input
                   onChangeText={this.changeDepot}
                   value={this.state.depot}
                   shake={true}
@@ -178,7 +251,7 @@ class Settings extends Component {
               </View>
 
               <View
-                style={{ flex: 0.5, marginTop: 50, justifyContent: "center" }}
+                style={{ flex: 0.1, justifyContent: "center", marginTop: 50 }}
               >
                 <TouchableOpacity>
                   <Button mode="contained" onPress={() => this.saveSettings()}>
@@ -210,16 +283,6 @@ class Settings extends Component {
                   </Button>
                 )}
               </TouchableOpacity>
-            </View>
-
-            <View style={{ justifyContent: "center", alignItems: "center" }}>
-              <Button
-                onPress={() => this.provokeError()}
-                mode="contained"
-                color="red"
-              >
-                Error
-              </Button>
             </View>
           </ScrollView>
         </View>
@@ -258,12 +321,13 @@ const style = StyleSheet.create({
     borderBottomEndRadius: 20
   },
   form: {
-    flex: 0.7
+    flex: 1
   },
   login: {
     flex: 0.5,
     justifyContent: "center",
-    padding: 30
+    padding: 30,
+    paddingTop: 30
   }
 });
 
