@@ -53,9 +53,6 @@ class BasketModal extends React.Component {
 
   handleQuantity = e => {
     if (isNormalInteger(e)) {
-      console.log("nomral");
-      console.log(e);
-      console.log(parseInt(e));
       if (e != "0") {
         this.setState({ quantity: parseInt(e), errorQuantity: false });
       } else {

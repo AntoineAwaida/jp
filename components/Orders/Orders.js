@@ -159,6 +159,14 @@ class Orders extends Component {
   }
 
   componentDidMount() {
+    DB.getDatabase().then(db => {
+      db.transaction(tx => {
+        tx.executeSql(`SELECT * FROM CLIENT`, [], (tx, results) => {
+          console.log(results.rows.item(0));
+        });
+      });
+    });
+
     this.listenKeyboard();
     this.listenEvents();
 
@@ -167,14 +175,6 @@ class Orders extends Component {
     this.props.navigation.setParams({ articles, ee });
 
     this.getCoordinates(true);
-
-    DB.getDatabase().then(db =>
-      db.transaction(tx => {
-        tx.executeSql(`SELECT * FROM Tournee`, [], (tx, results) => {
-          console.log(results.rows.item(0));
-        });
-      })
-    );
 
     //createTable();
     //insérer un article...

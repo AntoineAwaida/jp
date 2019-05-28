@@ -19,6 +19,11 @@ import { EventEmitter } from "events";
 import logError from "./logError";
 import logCredentials from "./logCredentials";
 
+function isNormalInteger(str) {
+  var n = Math.floor(Number(str));
+  return n !== Infinity && String(n) === str;
+}
+
 class Settings extends Component {
   constructor(props, context) {
     super(props, context);
@@ -54,6 +59,7 @@ class Settings extends Component {
         username: credentials.username,
         password: credentials.password,
         database: credentials.database,
+        port: credentials.port,
         depot: credentials.depot
       });
     }
@@ -102,7 +108,15 @@ class Settings extends Component {
   }
 
   changePort(port) {
-    this.setState({ port: port });
+    if (isNormalInteger(port)) {
+      if (port != "0") {
+        this.setState({ port: parseInt(port) });
+      } else {
+        this.setState({ port: 0 });
+      }
+    } else {
+      this.setState({ port: "" });
+    }
   }
 
   changeUsername(name) {
@@ -217,7 +231,7 @@ class Settings extends Component {
                 />
                 <Input
                   onChangeText={this.changePort}
-                  value={this.state.port}
+                  value={!isNaN(this.state.port) && String(this.state.port)}
                   keyboardType="numeric"
                   placeholder="Port"
                   name="port"

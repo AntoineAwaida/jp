@@ -27,6 +27,7 @@ class Sync extends Component {
       console.log(results);
     } catch (e) {
       await logError(e);
+      console.log(e);
     } finally {
       this.setState({ isLoading: false, syncModal: false });
     }

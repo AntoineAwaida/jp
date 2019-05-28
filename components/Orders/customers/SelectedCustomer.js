@@ -34,7 +34,7 @@ class SelectedCustomer extends Component {
           >
             <FontAwesome5 style={style.textColor} name="phone" />
             <Text style={[{ marginLeft: 5 }, style.textColor]}>
-              {this.props.customer.TelFacturation}
+              {this.props.customer.Telephone1}
             </Text>
           </View>
           <View
@@ -46,7 +46,7 @@ class SelectedCustomer extends Component {
           >
             <FontAwesome5 style={style.textColor} name="truck-moving" />
             <Text style={[{ marginLeft: 5 }, style.textColor]}>
-              {this.props.customer.AdrLivraison1}
+              {this.props.customer.AdrFacturation1}
             </Text>
           </View>
         </View>
