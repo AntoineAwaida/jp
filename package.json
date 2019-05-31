@@ -16,6 +16,7 @@
     "react": "16.8.3",
     "react-native": "0.59.5",
     "react-native-background-geolocation": "^3.0.5",
+    "react-native-bluetooth-escpos-printer": "0.0.5",
     "react-native-elements": "^1.1.0",
     "react-native-geolocation-service": "^2.0.1",
     "react-native-gesture-handler": "^1.2.1",

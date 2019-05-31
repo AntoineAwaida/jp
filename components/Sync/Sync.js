@@ -12,6 +12,12 @@ import sync from "./syncDB";
 import SyncModal from "./SyncModal";
 import logError from "../Settings/logError";
 
+import {
+  BluetoothManager,
+  BluetoothEscposPrinter,
+  BluetoothTscPrinter
+} from "react-native-bluetooth-escpos-printer";
+
 class Sync extends Component {
   constructor(props, context) {
     super(props, context);

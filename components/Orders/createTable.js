@@ -1,7 +1,6 @@
 import { DB } from "../../database/database";
 
 export default function createTable() {
-  console.log("coucou");
   DB.getDatabase().then(db =>
     db.transaction(tx => {
       tx.executeSql(

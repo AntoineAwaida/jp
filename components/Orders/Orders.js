@@ -161,7 +161,7 @@ class Orders extends Component {
   componentDidMount() {
     DB.getDatabase().then(db => {
       db.transaction(tx => {
-        tx.executeSql(`SELECT * FROM CLIENT`, [], (tx, results) => {
+        tx.executeSql(`SELECT COUNT(*) FROM ARTICLE`, [], (tx, results) => {
           console.log(results.rows.item(0));
         });
       });
