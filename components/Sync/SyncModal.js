@@ -14,8 +14,8 @@ class SyncModal extends Component {
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <Text h3 style={{ color: "white" }}>
-            Sync...
+          <Text h3 style={{ color: "white", textAlign: "center" }}>
+            {this.props.msg}
           </Text>
         </View>
       </Modal>
@@ -24,7 +24,8 @@ class SyncModal extends Component {
 }
 
 SyncModal.propTypes = {
-  isVisible: PropTypes.bool
+  isVisible: PropTypes.bool,
+  msg: PropTypes.string
 };
 
 export default SyncModal;

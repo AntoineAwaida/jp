@@ -1,5 +1,4 @@
 import MSSQL from "react-native-mssql";
-import logError from "../../Settings/logError";
 
 export default async function sync_Article(depot) {
   let query =

@@ -18,6 +18,10 @@ import {
   BluetoothTscPrinter
 } from "react-native-bluetooth-escpos-printer";
 
+import BottomMessage from "../../Layout/Alert/bottomMessage";
+
+import { EventEmitter } from "events";
+
 export default class ViewOrder extends Component {
   static navigationOptions = ({ navigation }) => {
     const bluetoothPrint = navigation.getParam("bluetoothPrint");
@@ -37,8 +41,6 @@ export default class ViewOrder extends Component {
   };
 
   async _bluetoothPrint(commande, composition) {
-    console.log(commande);
-    console.log(composition);
     try {
       await BluetoothEscposPrinter.printerInit();
       await BluetoothEscposPrinter.printerLeftSpace(0);
@@ -137,7 +139,16 @@ export default class ViewOrder extends Component {
       );
       await BluetoothEscposPrinter.printText("\r\n\r\n\r\n", {});
     } catch (e) {
-      logError(e.message);
+      logError(e);
+      this.setState(
+        {
+          error: true,
+          message: "Error in printing. See log for details."
+        },
+        () => {
+          this._emitter.emit("trigger-message");
+        }
+      );
     }
   }
 
@@ -145,8 +156,11 @@ export default class ViewOrder extends Component {
     super(props, context);
     this.state = {
       commande: null,
-      isLoading: true
+      isLoading: true,
+      message: null,
+      error: false
     };
+    this._emitter = new EventEmitter();
   }
 
   componentDidMount() {
@@ -193,104 +207,114 @@ export default class ViewOrder extends Component {
         <ActivityIndicator size="large" />
       </View>
     ) : (
-      <View style={{ flex: 1 }}>
-        <View style={{ flex: 0.3 }}>
-          <BluetoothConn />
-        </View>
+      <>
         <View style={{ flex: 1 }}>
-          <View>
-            <Text style={{ textAlign: "center", color: "#571db2" }} h3>
-              {"Order #" + this.state.commande.Code_Commande}
-            </Text>
+          <View style={{ flex: 0.3 }}>
+            <BluetoothConn />
           </View>
-          <View style={{ flexDirection: "row", margin: 10 }}>
-            <FontAwesome5
-              solid
+          <View style={{ flex: 1, borderTopColor: "grey", borderTopWidth: 4 }}>
+            <View>
+              <Text style={{ textAlign: "center", color: "#571db2" }} h3>
+                {"Order #" + this.state.commande.Code_Commande}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", margin: 10 }}>
+              <FontAwesome5
+                solid
+                style={{
+                  textAlignVertical: "center",
+                  marginLeft: 10,
+                  marginRight: 10
+                }}
+                name="clock"
+              />
+              <Text style={{ fontSize: 17 }}>
+                Created at : {this.state.commande.DateCreation}
+              </Text>
+            </View>
+            <View
+              style={{ flexDirection: "row", marginLeft: 10, marginBottom: 10 }}
+            >
+              <FontAwesome5
+                solid
+                style={{
+                  textAlignVertical: "center",
+                  marginLeft: 10,
+                  marginRight: 10
+                }}
+                name="user"
+              />
+              <Text style={{ fontSize: 17 }}>
+                Client: {this.state.commande.RaisonSociale}
+              </Text>
+            </View>
+            <View
+              style={{ flexDirection: "row", marginLeft: 10, marginBottom: 20 }}
+            >
+              <FontAwesome5
+                solid
+                style={{
+                  textAlignVertical: "center",
+                  marginLeft: 10,
+                  marginRight: 10
+                }}
+                name="globe"
+              />
+              <Text style={{ fontSize: 17 }}>
+                GPS:{" "}
+                {"N: " +
+                  this.state.commande.ZoneN4 +
+                  " / E: " +
+                  this.state.commande.ZoneN5}
+              </Text>
+            </View>
+            <View style={{ flex: 0.8 }}>
+              <FlatList
+                keyExtractor={item => item.Code_Article.toString()}
+                data={this.state.composition}
+                sty
+                renderItem={({ item }) => (
+                  <ListItem
+                    rightElement={
+                      <FontAwesome5 name="dollar-sign">
+                        <Text>
+                          {Math.round(item.Quantite * item.PrixUnitaire * 100) /
+                            100}
+                        </Text>
+                      </FontAwesome5>
+                    }
+                    key={item.Code_Article}
+                    title={item.Designation}
+                    containerStyle={{ backgroundColor: "#f5f5f5" }}
+                    subtitle={"Quantity: " + item.Quantite}
+                    subtitleStyle={{ fontWeight: "bold" }}
+                  />
+                )}
+              />
+            </View>
+            <View
               style={{
-                textAlignVertical: "center",
-                marginLeft: 10,
-                marginRight: 10
+                flex: 0.1,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center"
               }}
-              name="clock"
-            />
-            <Text style={{ fontSize: 17 }}>
-              Created at : {this.state.commande.DateCreation}
-            </Text>
-          </View>
-          <View
-            style={{ flexDirection: "row", marginLeft: 10, marginBottom: 10 }}
-          >
-            <FontAwesome5
-              solid
-              style={{
-                textAlignVertical: "center",
-                marginLeft: 10,
-                marginRight: 10
-              }}
-              name="user"
-            />
-            <Text style={{ fontSize: 17 }}>
-              Client: {this.state.commande.RaisonSociale}
-            </Text>
-          </View>
-          <View
-            style={{ flexDirection: "row", marginLeft: 10, marginBottom: 20 }}
-          >
-            <FontAwesome5
-              solid
-              style={{
-                textAlignVertical: "center",
-                marginLeft: 10,
-                marginRight: 10
-              }}
-              name="globe"
-            />
-            <Text style={{ fontSize: 17 }}>
-              GPS:{" "}
-              {"N: " +
-                this.state.commande.ZoneN4 +
-                " / E: " +
-                this.state.commande.ZoneN5}
-            </Text>
-          </View>
-          <View style={{ flex: 0.8 }}>
-            <FlatList
-              keyExtractor={item => item.Code_Article.toString()}
-              data={this.state.composition}
-              sty
-              renderItem={({ item }) => (
-                <ListItem
-                  rightElement={
-                    <FontAwesome5 name="dollar-sign">
-                      <Text>
-                        {Math.round(item.Quantite * item.PrixUnitaire * 100) /
-                          100}
-                      </Text>
-                    </FontAwesome5>
-                  }
-                  key={item.Code_Article}
-                  title={item.Designation}
-                  containerStyle={{ backgroundColor: "#f5f5f5" }}
-                  subtitle={"Quantity: " + item.Quantite}
-                  subtitleStyle={{ fontWeight: "bold" }}
-                />
-              )}
-            />
-          </View>
-          <View
-            style={{
-              flex: 0.1,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
-            <Text h4>Total amount : </Text>
-            <FontAwesome5 name="dollar-sign" size={20} />
-            <Text h4>{" " + this.state.commande.MontantAcompte}</Text>
+            >
+              <Text h4>Total amount : </Text>
+              <FontAwesome5 name="dollar-sign" size={20} />
+              <Text h4>
+                {" " +
+                  Math.round(this.state.commande.MontantAcompte * 100) / 100}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+        <BottomMessage
+          msg={this.state.message}
+          error={this.state.error}
+          emitter={this._emitter}
+        />
+      </>
     );
   }
 }

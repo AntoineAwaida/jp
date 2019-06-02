@@ -296,7 +296,7 @@ class Orders extends Component {
                     marginTop: 15
                   }}
                 >
-                  SELECT A CUSTOMER.
+                  SELECT A CUSTOMER
                 </Text>
               </View>
 

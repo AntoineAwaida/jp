@@ -69,12 +69,11 @@ class Settings extends Component {
     this.setState({ isTesting: true }, () => {
       testConnection()
         .then(res => {
-          console.log(res);
           this.setState({ isTesting: false, connSuccessful: true });
         })
         .catch(err => {
           logError(err);
-          console.log(err);
+
           this.setState(
             {
               isTesting: false,

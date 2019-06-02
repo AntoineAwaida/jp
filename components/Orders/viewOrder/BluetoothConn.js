@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
   ScrollView,
   DeviceEventEmitter,
   NativeEventEmitter,
@@ -20,6 +19,7 @@ import {
   BluetoothManager,
   BluetoothTscPrinter
 } from "react-native-bluetooth-escpos-printer";
+import { Button } from "react-native-paper";
 
 var { height, width } = Dimensions.get("window");
 export default class BluetoothConn extends Component {
@@ -33,9 +33,56 @@ export default class BluetoothConn extends Component {
       foundDs: [],
       bleOpend: false,
       loading: true,
-      boundAddress: "",
-      debugMsg: ""
+      boundAddress: ""
     };
+    this.bluetoothSwitch = this.bluetoothSwitch.bind(this);
+  }
+
+  bluetoothSwitch(v) {
+    this.setState({
+      loading: true
+    });
+    if (!v) {
+      BluetoothManager.disableBluetooth().then(
+        () => {
+          this.setState({
+            bleOpend: false,
+            loading: false,
+            foundDs: [],
+            pairedDs: []
+          });
+        },
+        err => {
+          alert(err);
+        }
+      );
+    } else {
+      BluetoothManager.enableBluetooth().then(
+        r => {
+          var paired = [];
+          if (r && r.length > 0) {
+            for (var i = 0; i < r.length; i++) {
+              try {
+                paired.push(JSON.parse(r[i]));
+              } catch (e) {
+                //ignore
+              }
+            }
+          }
+          this.setState({
+            bleOpend: true,
+            loading: false,
+            pairedDs: paired
+          });
+        },
+        err => {
+          this.setState({
+            loading: false
+          });
+          alert(err);
+        }
+      );
+    }
   }
 
   componentDidMount() {
@@ -220,93 +267,57 @@ export default class BluetoothConn extends Component {
   render() {
     return (
       <ScrollView style={styles.container}>
-        <Text>{this.state.debugMsg}</Text>
-        <Text style={styles.title}>
-          Blutooth Opended:{this.state.bleOpend ? "true" : "false"}{" "}
-          <Text>Open BLE Before Scanning</Text>{" "}
-        </Text>
         <View>
-          <Switch
-            value={this.state.bleOpend}
-            onValueChange={v => {
-              this.setState({
-                loading: true
-              });
-              if (!v) {
-                BluetoothManager.disableBluetooth().then(
-                  () => {
-                    this.setState({
-                      bleOpend: false,
-                      loading: false,
-                      foundDs: [],
-                      pairedDs: []
-                    });
-                  },
-                  err => {
-                    alert(err);
-                  }
-                );
-              } else {
-                BluetoothManager.enableBluetooth().then(
-                  r => {
-                    var paired = [];
-                    if (r && r.length > 0) {
-                      for (var i = 0; i < r.length; i++) {
-                        try {
-                          paired.push(JSON.parse(r[i]));
-                        } catch (e) {
-                          //ignore
-                        }
-                      }
-                    }
-                    this.setState({
-                      bleOpend: true,
-                      loading: false,
-                      pairedDs: paired
-                    });
-                  },
-                  err => {
-                    this.setState({
-                      loading: false
-                    });
-                    alert(err);
-                  }
-                );
-              }
-            }}
-          />
-          <Button
-            disabled={this.state.loading || !this.state.bleOpend}
-            onPress={() => {
-              this._scan();
-            }}
-            title="Scan"
-          />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text>Bluetooth</Text>
+            <Switch
+              value={this.state.bleOpend}
+              onValueChange={this.bluetoothSwitch}
+            />
+          </View>
         </View>
-        <Text style={styles.title}>
-          Connected:
-          <Text style={{ color: "blue" }}>
-            {!this.state.name ? "No Devices" : this.state.name}
-          </Text>
-        </Text>
-        <Text style={styles.title}>Found(tap to connect):</Text>
-        {this.state.loading ? <ActivityIndicator animating={true} /> : null}
-        <View style={{ flex: 1, flexDirection: "column" }}>
-          {this._renderRow(this.state.foundDs)}
-        </View>
-        <Text style={styles.title}>Paired:</Text>
-        {this.state.loading ? <ActivityIndicator animating={true} /> : null}
-        <View style={{ flex: 1, flexDirection: "column" }}>
-          {this._renderRow(this.state.pairedDs)}
-        </View>
+        {this.state.bleOpend ? (
+          <>
+            <Button
+              disabled={this.state.loading || !this.state.bleOpend}
+              onPress={() => {
+                this._scan();
+              }}
+            >
+              Press to scan devices
+            </Button>
 
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-around",
-            paddingVertical: 30
-          }}
-        />
+            <Text style={styles.title}>
+              Connected:
+              <Text style={{ color: this.state.name ? "green" : "red" }}>
+                {!this.state.name ? "No Devices" : this.state.name}
+              </Text>
+            </Text>
+            <Text style={styles.title}>
+              Found(scroll down and tap to connect):
+            </Text>
+            {this.state.loading ? <ActivityIndicator animating={true} /> : null}
+            <View style={{ flex: 1, flexDirection: "column" }}>
+              {this._renderRow(this.state.foundDs)}
+            </View>
+            <Text style={styles.title}>Paired:</Text>
+            {this.state.loading ? <ActivityIndicator animating={true} /> : null}
+            <View style={{ flex: 1, flexDirection: "column" }}>
+              {this._renderRow(this.state.pairedDs)}
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around"
+              }}
+            />
+          </>
+        ) : (
+          <View style={{ justifyContent: "center", alignItems: "center" }}>
+            <Text>Please activate bluetooth to print !</Text>
+          </View>
+        )}
       </ScrollView>
     );
   }
@@ -361,7 +372,7 @@ export default class BluetoothConn extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5FCFF"
+    backgroundColor: "white"
   },
 
   title: {

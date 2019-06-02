@@ -8,7 +8,7 @@ import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { DB } from "../../database/database";
 
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 import BottomMessage from "../Layout/Alert/bottomMessage";
 
 import PropTypes from "prop-types";

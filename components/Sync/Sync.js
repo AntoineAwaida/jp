@@ -12,24 +12,43 @@ import sync from "./syncDB";
 import SyncModal from "./SyncModal";
 import logError from "../Settings/logError";
 
-import {
-  BluetoothManager,
-  BluetoothEscposPrinter,
-  BluetoothTscPrinter
-} from "react-native-bluetooth-escpos-printer";
+import { EventEmitter } from "events";
 
 class Sync extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      isLoading: false
+      isLoading: false,
+      syncMsg: "Establishing connection..."
     };
+    this._emitter = new EventEmitter();
+  }
+
+  componentDidMount() {
+    this._emitter.on("pull", () => {
+      this.setState({ syncMsg: "Connection successful, pulling data..." });
+    });
+    this._emitter.on("push", () => {
+      this.setState({ syncMsg: "Pushing orders to remote DB..." });
+    });
+    this._emitter.on("drop", () => {
+      this.setState({ syncMsg: "Dropping local data..." });
+    });
+    this._emitter.on("save", () => {
+      this.setState({ syncMsg: "Saving new data..." });
+    });
+    this._emitter.on("success", () => {
+      this.setState({ syncMsg: "Sync succeeded!" });
+    });
+    this._emitter.on("fail", () => {
+      this.setState({ syncMsg: "Sync failed." });
+    });
   }
 
   async sync() {
     try {
       this.setState({ isLoading: true, syncModal: true });
-      const results = await sync();
+      const results = await sync(this._emitter);
       console.log(results);
     } catch (e) {
       await logError(e);
@@ -42,7 +61,7 @@ class Sync extends Component {
   render() {
     return (
       <>
-        <SyncModal isVisible={this.state.syncModal} />
+        <SyncModal msg={this.state.syncMsg} isVisible={this.state.syncModal} />
 
         <View style={{ flex: 1 }}>
           <View

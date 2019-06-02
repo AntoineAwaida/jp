@@ -1,6 +1,5 @@
 import MSSQL from "react-native-mssql";
 import AsyncStorage from "@react-native-community/async-storage";
-import sync_p_famille from "./pulls/sync_p_famille";
 import sync_p_sousFamille from "./pulls/sync_p_sousFamille";
 
 import sync_FamilleRemise from "./pulls/sync_FamilleRemise";
@@ -9,33 +8,14 @@ import sync_Article from "./pulls/sync_Article";
 
 import sync_p_Tarif from "./pulls/sync_p_Tarif";
 
-import drop_Article from "./drops/drop_Article";
-import save_Article from "./saves/save_Article";
-
-import drop_TarifarticlePrix from "./drops/drop_TarifarticlePrix";
-import save_TarifarticlePrix from "./saves/save_TarifarticlePrix";
-
-import drop_p_Tarif from "./drops/drop_p_Tarif";
-
-import drop_p_Famille from "./drops/drop_p_Famille";
-
-import drop_p_SousFamille from "./drops/drop_p_SousFamille";
-
-import drop_Client from "./drops/drop_Client";
-
-import drop_FamilleRemise from "./drops/drop_FamilleRemise";
-import save_FamilleRemise from "./saves/save_FamilleRemise";
-import save_p_Famille from "./saves/save_p_Famille";
-import save_p_SousFamille from "./saves/save_p_SousFamille";
-
-import save_p_Tarif from "./saves/save_p_Tarif";
 import sync_Client from "./pulls/sync_Client";
 
-import drop_pct_Commande from "./drops/drop_pct_Commande";
-import drop_pct_CommandeComposition from "./drops/drop_pct_CommandeComposition";
-import save_Client from "./saves/save_Client";
+import save from "./saves/save";
+import drop from "./drops/drop";
 
-export default async function sync() {
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+export default async function sync(emitter) {
   let config = await AsyncStorage.getItem("credentials");
 
   config = await JSON.parse(config);
@@ -44,18 +24,11 @@ export default async function sync() {
   delete config.depot;
   await MSSQL.connect(config);
 
+  emitter.emit("pull");
+
   //p_Famille désactivée, colonnes manquantes.
 
-  await drop_Article();
-  await drop_TarifarticlePrix();
-  await drop_p_Tarif();
-  await drop_p_SousFamille();
-  //await drop_p_Famille();
-  await drop_FamilleRemise();
-  await drop_Client();
-
-  await drop_pct_Commande();
-  await drop_pct_CommandeComposition();
+  //sync (avant drop pour garantir que l'on a les donnnées avant de drop)
 
   const Client = await sync_Client(depot);
   const p_Tarif = await sync_p_Tarif();
@@ -65,13 +38,39 @@ export default async function sync() {
   const TarifarticlePrix = await sync_TarifarticlePrix(depot);
   const Article = await sync_Article(depot);
 
-  await save_p_Tarif(p_Tarif);
-  await save_Article(Article);
-  await save_TarifarticlePrix(TarifarticlePrix);
-  await save_FamilleRemise(FamilleRemise);
-  //await save_p_Famille(p_famille);
-  await save_p_SousFamille(p_sousFamille);
-  await save_Client(Client);
+  emitter.emit("push");
 
-  return "ok";
+  //insert into
+
+  //drop
+
+  emitter.emit("drop");
+
+  const _drop = await drop();
+
+  if (_drop !== "finished") {
+    throw Error("Sync failed. Failed to drop tables.");
+  }
+
+  emitter.emit("save");
+
+  //await save_p_Famille(p_famille);
+  const result = await save(
+    Client,
+    p_sousFamille,
+    FamilleRemise,
+    TarifarticlePrix,
+    Article,
+    p_Tarif
+  );
+
+  if (result === "finished") {
+    emitter.emit("success");
+    await delay(2000);
+    return "ok";
+  } else {
+    emitter.emit("fail");
+    await delay(2000);
+    throw Error("Save failed. Failed to save data.");
+  }
 }
