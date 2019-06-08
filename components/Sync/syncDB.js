@@ -49,7 +49,7 @@ export default async function sync(emitter) {
   const _drop = await drop();
 
   if (_drop !== "finished") {
-    throw Error("Sync failed. Failed to drop tables.");
+    throw Error(_drop.message);
   }
 
   emitter.emit("save");
@@ -71,6 +71,6 @@ export default async function sync(emitter) {
   } else {
     emitter.emit("fail");
     await delay(2000);
-    throw Error("Save failed. Failed to save data.");
+    throw Error(result.message);
   }
 }

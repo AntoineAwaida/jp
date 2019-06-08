@@ -9,7 +9,7 @@ import { DB } from "../../../database/database";
 import { ActivityIndicator } from "react-native-paper";
 
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
-import { FlatList } from "react-native-gesture-handler";
+import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
 import logError from "../../Settings/logError";
 import BluetoothConn from "./BluetoothConn";
 import {
@@ -29,13 +29,15 @@ export default class ViewOrder extends Component {
     const composition = navigation.getParam("composition");
     return {
       headerRight: (
-        <FontAwesome5
-          style={{ marginRight: 20 }}
-          color="#6200ee"
-          name="print"
-          size={30}
-          onPress={() => bluetoothPrint(commande, composition)}
-        />
+        <TouchableOpacity>
+          <FontAwesome5
+            style={{ marginRight: 20 }}
+            color="#6200ee"
+            name="print"
+            size={30}
+            onPress={() => bluetoothPrint(commande, composition)}
+          />
+        </TouchableOpacity>
       )
     };
   };
@@ -143,7 +145,8 @@ export default class ViewOrder extends Component {
       this.setState(
         {
           error: true,
-          message: "Error in printing. See log for details."
+          message:
+            "Error in printing. Check bluetooth pairing, or see log for further details."
         },
         () => {
           this._emitter.emit("trigger-message");
@@ -161,6 +164,7 @@ export default class ViewOrder extends Component {
       error: false
     };
     this._emitter = new EventEmitter();
+    this._bluetoothPrint = this._bluetoothPrint.bind(this);
   }
 
   componentDidMount() {

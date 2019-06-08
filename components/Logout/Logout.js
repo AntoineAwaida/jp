@@ -55,9 +55,6 @@ class Logout extends Component {
 
     if (credentials.depot) {
       tournee.Code_PocketPC = credentials.depot;
-
-      console.log(tournee);
-
       await saveTournee(tournee);
 
       return true;

@@ -10,6 +10,8 @@ import drop_p_Tarif from "./drop_p_Tarif";
 import drop_pct_Commande from "./drop_pct_Commande";
 import drop_pct_CommandeComposition from "./drop_pct_CommandeComposition";
 
+import logError from "../../Settings/logError";
+
 export default function drop() {
   return new Promise(resolve =>
     DB.getDatabase().then(db => {
@@ -30,7 +32,7 @@ export default function drop() {
         },
         err => {
           logError(err);
-          resolve("error");
+          resolve(err);
           console.log(err);
         },
         () => {

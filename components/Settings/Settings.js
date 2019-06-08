@@ -18,6 +18,7 @@ import BottomMessage from "../Layout/Alert/bottomMessage";
 import { EventEmitter } from "events";
 import logError from "./logError";
 import logCredentials from "./logCredentials";
+import create from "./create/create";
 
 function isNormalInteger(str) {
   var n = Math.floor(Number(str));
@@ -99,7 +100,7 @@ class Settings extends Component {
       this.state.depot
     );
     this.setState(
-      { message: "Credentials successfully uypdated", error: false },
+      { message: "Credentials successfully updated", error: false },
       () => {
         this._emitter.emit("trigger-message");
       }
@@ -138,6 +139,33 @@ class Settings extends Component {
     this.setState({ depot: depot });
   }
 
+  async createTables() {
+    try {
+      await create();
+      this.setState(
+        {
+          error: false,
+          message: "Tables successfully created!"
+        },
+        () => {
+          this._emitter.emit("trigger-message");
+        }
+      );
+    } catch (e) {
+      console.log(e);
+      logError(e);
+      this.setState(
+        {
+          error: true,
+          message: "Error while creating tables."
+        },
+        () => {
+          this._emitter.emit("trigger-message");
+        }
+      );
+    }
+  }
+
   render() {
     return (
       <>
@@ -162,7 +190,7 @@ class Settings extends Component {
                   clearTextOnFocus={true}
                   inputContainerStyle={style.dividerStyle}
                   textContentType="username"
-                  placeholderTextColor="#6200ee"
+                  placeholderTextColor="grey"
                   selectionColor="grey"
                   inputStyle={{ color: "#6200ee", marginLeft: 15 }}
                   leftIcon={
@@ -182,7 +210,7 @@ class Settings extends Component {
                   clearTextOnFocus={true}
                   inputContainerStyle={style.dividerStyle}
                   textContentType="username"
-                  placeholderTextColor="#6200ee"
+                  placeholderTextColor="grey"
                   selectionColor="grey"
                   inputStyle={{ color: "#6200ee", marginLeft: 15 }}
                   leftIcon={
@@ -203,7 +231,7 @@ class Settings extends Component {
                   clearTextOnFocus={true}
                   inputContainerStyle={style.dividerStyle}
                   inputStyle={{ color: "#6200ee", marginLeft: 10 }}
-                  placeholderTextColor="#6200ee"
+                  placeholderTextColor="grey"
                   secureTextEntry={true}
                   textContentType="password"
                   leftIcon={<FontAwesome5 name="key" size={20} color="white" />}
@@ -216,7 +244,7 @@ class Settings extends Component {
                   clearTextOnFocus={true}
                   inputContainerStyle={style.dividerStyle}
                   textContentType="username"
-                  placeholderTextColor="#6200ee"
+                  placeholderTextColor="grey"
                   selectionColor="grey"
                   inputStyle={{ color: "#6200ee", marginLeft: 15 }}
                   leftIcon={
@@ -237,7 +265,7 @@ class Settings extends Component {
                   clearTextOnFocus={true}
                   inputContainerStyle={style.dividerStyle}
                   textContentType="username"
-                  placeholderTextColor="#6200ee"
+                  placeholderTextColor="grey"
                   selectionColor="grey"
                   inputStyle={{ color: "#6200ee", marginLeft: 15 }}
                   leftIcon={
@@ -258,7 +286,7 @@ class Settings extends Component {
                   clearTextOnFocus={true}
                   inputContainerStyle={style.dividerStyle}
                   inputStyle={{ color: "#6200ee", marginLeft: 10 }}
-                  placeholderTextColor="#6200ee"
+                  placeholderTextColor="grey"
                   leftIcon={<FontAwesome5 name="key" size={20} color="white" />}
                 />
               </View>
@@ -295,6 +323,18 @@ class Settings extends Component {
                     Connection ok!
                   </Button>
                 )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={style.login}>
+              <TouchableOpacity>
+                <Button
+                  mode="contained"
+                  onPress={() => this.createTables()}
+                  color="red"
+                >
+                  Create Tables
+                </Button>
               </TouchableOpacity>
             </View>
           </ScrollView>

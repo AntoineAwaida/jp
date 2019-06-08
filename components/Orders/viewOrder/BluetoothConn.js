@@ -283,6 +283,8 @@ export default class BluetoothConn extends Component {
               onPress={() => {
                 this._scan();
               }}
+              mode="contained"
+              style={{ borderRadius: 0 }}
             >
               Press to scan devices
             </Button>

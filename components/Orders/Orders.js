@@ -30,7 +30,6 @@ import LinearGradient from "react-native-linear-gradient";
 import logError from "../Settings/logError";
 
 import withBadge from "./withBadge";
-import createTable from "./createTable";
 
 const EventEmitter = require("events");
 
@@ -139,7 +138,6 @@ class Orders extends Component {
   getCoordinates(high) {
     navigator.geolocation.getCurrentPosition(
       res => {
-        console.log(res);
         const coordinates = {
           latitude: res.coords.latitude,
           longitude: res.coords.longitude,
@@ -159,14 +157,6 @@ class Orders extends Component {
   }
 
   componentDidMount() {
-    DB.getDatabase().then(db => {
-      db.transaction(tx => {
-        tx.executeSql(`SELECT COUNT(*) FROM ARTICLE`, [], (tx, results) => {
-          console.log(results.rows.item(0));
-        });
-      });
-    });
-
     this.listenKeyboard();
     this.listenEvents();
 
@@ -175,32 +165,6 @@ class Orders extends Component {
     this.props.navigation.setParams({ articles, ee });
 
     this.getCoordinates(true);
-
-    //createTable();
-    //insérer un article...
-    // DB.getDatabase().then(db =>
-    //   db.transaction(tx => {
-    //     tx.executeSql(
-    //       `INSERT INTO ArticleDepot VALUES ('305408 0007616', '50') `
-    //     );
-    //     tx.executeSql(
-    //       `INSERT INTO ArticleDepot VALUES ('305408 0053323', '50') `
-    //     );
-    //     tx.executeSql(
-    //       `INSERT INTO ArticleDepot VALUES ('305832 0005028', '50') `
-    //     );
-    //     tx.executeSql(
-    //       `INSERT INTO ArticleDepot VALUES ('305832 0010152', '50') `
-    //     );
-    //   })
-    // );
-    //pour supprimer les commandes...
-    // DB.getDatabase().then(db => {
-    //   db.transaction(tx => {
-    //     tx.executeSql(`DELETE FROM pct_COMMANDE`);
-    //     tx.executeSql("DELETE FROM pct_COMMANDEcomposition");
-    //   });
-    // });
   }
 
   toggleBasketModal(article) {

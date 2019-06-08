@@ -29,7 +29,7 @@ export default function save(
         },
         err => {
           logError(err);
-          resolve("error");
+          resolve(err);
           console.log(err);
         },
         () => {

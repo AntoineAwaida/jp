@@ -13,13 +13,16 @@ import SyncModal from "./SyncModal";
 import logError from "../Settings/logError";
 
 import { EventEmitter } from "events";
+import BottomMessage from "../Layout/Alert/bottomMessage";
 
 class Sync extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
       isLoading: false,
-      syncMsg: "Establishing connection..."
+      syncMsg: "Establishing connection...",
+      message: "",
+      error: false
     };
     this._emitter = new EventEmitter();
   }
@@ -47,12 +50,32 @@ class Sync extends Component {
 
   async sync() {
     try {
-      this.setState({ isLoading: true, syncModal: true });
+      this.setState({
+        isLoading: true,
+        syncModal: true,
+        syncMsg: "Establisihing connection..."
+      });
       const results = await sync(this._emitter);
-      console.log(results);
+      this.setState(
+        {
+          message: "Sync succeeded!",
+          error: false
+        },
+        () => {
+          this._emitter.emit("trigger-message");
+        }
+      );
     } catch (e) {
       await logError(e);
-      console.log(e);
+      this.setState(
+        {
+          message: "Sync failed. See log for details.",
+          error: true
+        },
+        () => {
+          this._emitter.emit("trigger-message");
+        }
+      );
     } finally {
       this.setState({ isLoading: false, syncModal: false });
     }
@@ -85,6 +108,11 @@ class Sync extends Component {
             </TouchableOpacity>
           </View>
         </View>
+        <BottomMessage
+          msg={this.state.message}
+          error={this.state.error}
+          emitter={this._emitter}
+        />
       </>
     );
   }
