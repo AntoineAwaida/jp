@@ -1,5 +1,3 @@
-import { DB } from "../../../database/database";
-
 export default function save_p_Famille(tx, items) {
   return items.map((item, i) => {
     let columns = "";

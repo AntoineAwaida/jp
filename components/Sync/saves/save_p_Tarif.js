@@ -1,6 +1,3 @@
-import { DB } from "../../../database/database";
-
-//répond trop vite - je voudrais retourner la valeur après la transaction!
 export default function save_p_Tarif(tx, items) {
   return items.map((item, i) => {
     let columns = "";

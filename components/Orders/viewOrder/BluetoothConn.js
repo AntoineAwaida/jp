@@ -20,6 +20,7 @@ import {
   BluetoothTscPrinter
 } from "react-native-bluetooth-escpos-printer";
 import { Button } from "react-native-paper";
+import AsyncStorage from "@react-native-community/async-storage";
 
 var { height, width } = Dimensions.get("window");
 export default class BluetoothConn extends Component {
@@ -85,8 +86,22 @@ export default class BluetoothConn extends Component {
     }
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     //alert(BluetoothManager)
+
+    let device = await AsyncStorage.getItem("bluetooth");
+    device = await JSON.parse(device);
+
+    if (device) {
+      BluetoothManager.connect(device.boundAddress).then(s => {
+        this.setState({
+          loading: false,
+          boundAddress: device.boundAddress,
+          name: device.name || "UNKNOWN"
+        });
+      });
+    }
+
     BluetoothManager.isBluetoothEnabled().then(
       enabled => {
         this.setState({
@@ -240,11 +255,22 @@ export default class BluetoothConn extends Component {
               });
               BluetoothManager.connect(row.address).then(
                 s => {
-                  this.setState({
-                    loading: false,
-                    boundAddress: row.address,
-                    name: row.name || "UNKNOWN"
-                  });
+                  this.setState(
+                    {
+                      loading: false,
+                      boundAddress: row.address,
+                      name: row.name || "UNKNOWN"
+                    },
+                    () => {
+                      AsyncStorage.setItem(
+                        "bluetooth",
+                        JSON.stringify({
+                          name: row.name || "UNKNOWN",
+                          boundAddress: row.address
+                        })
+                      );
+                    }
+                  );
                 },
                 e => {
                   this.setState({

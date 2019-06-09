@@ -12,6 +12,9 @@ import Navigation from "./components/Navigation/Navigation";
 import { ActivityIndicator } from "react-native-paper";
 import { DB } from "./database/database";
 import logError from "./components/Settings/logError";
+import AsyncStorage from "@react-native-community/async-storage";
+
+import { BluetoothManager } from "react-native-bluetooth-escpos-printer";
 
 export default class App extends Component {
   constructor(props, context) {
@@ -32,9 +35,19 @@ export default class App extends Component {
       });
   }
 
+  async connectPrinter() {
+    let device = await AsyncStorage.getItem("bluetooth");
+    device = await JSON.parse(device);
+
+    if (device) {
+      BluetoothManager.connect(device.boundAddress);
+    }
+  }
+
   async componentDidMount() {
     await this.testDBConnection();
     await this.requestLocationPermission();
+    await this.connectPrinter();
   }
 
   async requestLocationPermission() {

@@ -20,6 +20,7 @@ import React from "react";
 
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import Logout from "../Logout/Logout";
+import UserSettings from "../Settings/UserSettings";
 
 const OrderNavigator = createStackNavigator(
   {
@@ -67,6 +68,10 @@ const TabNavigator = createBottomTabNavigator(
       screen: Sync
     },
 
+    Settings: {
+      screen: UserSettings
+    },
+
     Logout: {
       screen: Logout
     }
@@ -80,6 +85,8 @@ const TabNavigator = createBottomTabNavigator(
           iconName = "list-alt";
         } else if (routeName === "Map") {
           iconName = "map-signs";
+        } else if (routeName === "Settings") {
+          iconName = "cog";
         } else if (routeName === "Sync") {
           iconName = "sync-alt";
         } else {

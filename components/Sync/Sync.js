@@ -66,6 +66,7 @@ class Sync extends Component {
         }
       );
     } catch (e) {
+      console.log(e);
       await logError(e);
       this.setState(
         {

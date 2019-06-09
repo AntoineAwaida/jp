@@ -147,9 +147,10 @@ class Orders extends Component {
         this.setState({ GPS: coordinates });
       },
       err => {
-        this.getCoordinates(false);
         if (high === false) {
           logError(err.message);
+        } else {
+          this.getCoordinates(false);
         }
       },
       { enableHighAccuracy: high, timeout: 5000 }

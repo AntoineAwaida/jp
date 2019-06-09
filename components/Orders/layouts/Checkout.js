@@ -18,7 +18,6 @@ import logError from "../../Settings/logError";
 
 function Checkout(props) {
   const [price, setPrice] = useState(0);
-  const [code, setCode] = useState(0);
 
   const [bottomPosition, setbottomPosition] = useState(new Animated.Value(0));
 
@@ -27,6 +26,10 @@ function Checkout(props) {
     let longitude = null;
 
     let credentials = await AsyncStorage.getItem("credentials");
+
+    let maxCode = await AsyncStorage.getItem("codeCommande");
+
+    maxCode = JSON.parse(maxCode);
 
     credentials = await JSON.parse(credentials);
 
@@ -47,7 +50,8 @@ function Checkout(props) {
 
                 if (results.rows.length > 0) {
                   code_commande = results.rows.item(0)["Code_Commande"] + 1;
-                  setCode(code_commande);
+                } else {
+                  code_commande = maxCode + 1;
                 }
 
                 tx.executeSql(

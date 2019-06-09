@@ -19,6 +19,7 @@ import { EventEmitter } from "events";
 import logError from "./logError";
 import logCredentials from "./logCredentials";
 import create from "./create/create";
+import BluetoothConn from "../Orders/viewOrder/BluetoothConn";
 
 function isNormalInteger(str) {
   var n = Math.floor(Number(str));
@@ -180,6 +181,7 @@ class Settings extends Component {
                 </Button>
               </TouchableOpacity>
             </View>
+            <BluetoothConn />
             <View style={style.container}>
               <View style={style.form}>
                 <Input

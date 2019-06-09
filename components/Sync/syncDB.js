@@ -12,6 +12,9 @@ import sync_Client from "./pulls/sync_Client";
 
 import save from "./saves/save";
 import drop from "./drops/drop";
+import send from "./send/send";
+import get_Code_Commande from "./pulls/get_Code_Commande";
+import sync_zz_Util from "./pulls/sync_zz_Util";
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -37,10 +40,17 @@ export default async function sync(emitter) {
   const FamilleRemise = await sync_FamilleRemise();
   const TarifarticlePrix = await sync_TarifarticlePrix(depot);
   const Article = await sync_Article(depot);
+  const zz_Util = await sync_zz_Util();
 
   emitter.emit("push");
 
   //insert into
+
+  const _send = await send(depot);
+
+  if (_send !== "finished") {
+    throw Error(_send);
+  }
 
   //drop
 
@@ -61,7 +71,8 @@ export default async function sync(emitter) {
     FamilleRemise,
     TarifarticlePrix,
     Article,
-    p_Tarif
+    p_Tarif,
+    zz_Util
   );
 
   if (result === "finished") {

@@ -1,6 +1,4 @@
-import { DB } from "../../../database/database";
-
-export default function save_TarifarticlePrix(tx, articles) {
+export default function save_zz_Util(tx, articles) {
   return articles.map((article, i) => {
     let columns = "";
     Object.keys(article).map(column => {
@@ -11,7 +9,7 @@ export default function save_TarifarticlePrix(tx, articles) {
     const query = "?,".repeat(Object.keys(article).length - 1) + "?";
 
     tx.executeSql(
-      `INSERT INTO TARIFarticlePrix(${columns}) VALUES(${query})`,
+      `INSERT INTO zz_Util(${columns}) VALUES(${query})`,
       Object.values(article)
     );
   });

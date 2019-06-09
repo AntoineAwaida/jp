@@ -21,6 +21,7 @@ import {
 import BottomMessage from "../../Layout/Alert/bottomMessage";
 
 import { EventEmitter } from "events";
+import AsyncStorage from "@react-native-community/async-storage";
 
 export default class ViewOrder extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -161,13 +162,25 @@ export default class ViewOrder extends Component {
       commande: null,
       isLoading: true,
       message: null,
-      error: false
+      error: false,
+      name: null
     };
     this._emitter = new EventEmitter();
     this._bluetoothPrint = this._bluetoothPrint.bind(this);
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    let device = await AsyncStorage.getItem("bluetooth");
+    device = await JSON.parse(device);
+    if (device) {
+      BluetoothManager.connect(device.boundAddress).then(s => {
+        this.setState({
+          loading: false,
+          boundAddress: device.boundAddress,
+          name: device.name || "UNKNOWN"
+        });
+      });
+    }
     this.props.navigation.setParams({ bluetoothPrint: this._bluetoothPrint });
     DB.getDatabase()
       .then(db => {
@@ -192,6 +205,7 @@ export default class ViewOrder extends Component {
                 data.push(results.rows.item(i));
               }
               this.setState({ composition: data, isLoading: false }, () => {
+                console.log(this.state.composition);
                 this.props.navigation.setParams({
                   composition: this.state.composition
                 });
@@ -213,8 +227,13 @@ export default class ViewOrder extends Component {
     ) : (
       <>
         <View style={{ flex: 1 }}>
-          <View style={{ flex: 0.3 }}>
-            <BluetoothConn />
+          <View style={{ alignItems: "center", margin: 5 }}>
+            <Text>
+              Connected:
+              <Text style={{ color: this.state.name ? "green" : "red" }}>
+                {!this.state.name ? "No Devices" : this.state.name}
+              </Text>
+            </Text>
           </View>
           <View style={{ flex: 1, borderTopColor: "grey", borderTopWidth: 4 }}>
             <View>
