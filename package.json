@@ -14,6 +14,7 @@
     "lodash": "^4.17.11",
     "prop-types": "^15.7.2",
     "react": "16.8.3",
+    "react-dots-loader": "^1.1.4",
     "react-native": "0.59.5",
     "react-native-background-geolocation": "^3.0.5",
     "react-native-bluetooth-escpos-printer": "0.0.5",

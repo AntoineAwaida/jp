@@ -15,6 +15,7 @@ import logError from "./components/Settings/logError";
 import AsyncStorage from "@react-native-community/async-storage";
 
 import { BluetoothManager } from "react-native-bluetooth-escpos-printer";
+import create from "./components/Settings/create/create";
 
 export default class App extends Component {
   constructor(props, context) {
@@ -44,8 +45,23 @@ export default class App extends Component {
     }
   }
 
+  async createTables() {
+    const createdtables = await AsyncStorage.getItem("createdtables");
+
+    if (!createdtables) {
+      try {
+        await create();
+        AsyncStorage.setItem("createdtables", "created");
+      } catch (e) {
+        console.log(e);
+        logError(e);
+      }
+    }
+  }
+
   async componentDidMount() {
     await this.testDBConnection();
+    await this.createTables();
     await this.requestLocationPermission();
     await this.connectPrinter();
   }

@@ -137,7 +137,7 @@ export default class ArticlesPick extends Component {
                         onPress={() => this.selectArticle(article)}
                       >
                         <Text style={styles.textArticle}>
-                          {article.Designation}
+                          {article.Designation.slice(0, 36)}
                         </Text>
                         <Text style={styles.textArticle}>
                           {article.Code_Article.slice(-4)}

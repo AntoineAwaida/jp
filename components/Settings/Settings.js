@@ -36,9 +36,9 @@ class Settings extends Component {
       error: null,
       server: null,
       username: null,
-      database: null,
+      database: "DataXV",
       password: null,
-      port: null,
+      port: 1433,
       depot: null
     };
     this._emitter = new EventEmitter();
@@ -138,33 +138,6 @@ class Settings extends Component {
 
   changeDepot(depot) {
     this.setState({ depot: depot });
-  }
-
-  async createTables() {
-    try {
-      await create();
-      this.setState(
-        {
-          error: false,
-          message: "Tables successfully created!"
-        },
-        () => {
-          this._emitter.emit("trigger-message");
-        }
-      );
-    } catch (e) {
-      console.log(e);
-      logError(e);
-      this.setState(
-        {
-          error: true,
-          message: "Error while creating tables."
-        },
-        () => {
-          this._emitter.emit("trigger-message");
-        }
-      );
-    }
   }
 
   render() {
@@ -325,18 +298,6 @@ class Settings extends Component {
                     Connection ok!
                   </Button>
                 )}
-              </TouchableOpacity>
-            </View>
-
-            <View style={style.login}>
-              <TouchableOpacity>
-                <Button
-                  mode="contained"
-                  onPress={() => this.createTables()}
-                  color="red"
-                >
-                  Create Tables
-                </Button>
               </TouchableOpacity>
             </View>
           </ScrollView>

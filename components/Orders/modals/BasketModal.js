@@ -188,19 +188,19 @@ class BasketModal extends React.Component {
         <View style={{ flexDirection: "row" }}>
           <View style={{ flex: 1 }}>
             <Button
+              title="Cancel"
+              buttonStyle={{ backgroundColor: "grey", borderRadius: 0 }}
+              onPress={() => this.closeModal()}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
               disabled={
                 this.state.errorQuantity || !this.state.quantity ? true : false
               }
               buttonStyle={{ backgroundColor: "#6200ee", borderRadius: 0 }}
               title="OK"
               onPress={() => this.chooseArticle()}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              title="Close"
-              buttonStyle={{ backgroundColor: "grey", borderRadius: 0 }}
-              onPress={() => this.closeModal()}
             />
           </View>
         </View>

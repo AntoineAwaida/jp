@@ -6,7 +6,7 @@ import BluetoothConn from "../Orders/viewOrder/BluetoothConn";
 export default class UserSettings extends Component {
   render() {
     return (
-      <View>
+      <View style={{ flex: 1, marginTop: 50 }}>
         <BluetoothConn />
       </View>
     );
