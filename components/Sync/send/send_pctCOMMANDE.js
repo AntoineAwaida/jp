@@ -12,7 +12,6 @@ export default async function send_pctCOMMANDE(commandes) {
       item.DateCreation = moment(item.DateCreation).format("YYYYMMDD HH:mm:ss");
       item.DateCreation = "'" + item.DateCreation + "'";
 
-      console.log(item.DateCreation);
       item.Code_Client = "'" + item.Code_Client + "'";
       item.nomPoste = "'" + item.nomPoste + "'";
       Object.keys(item).map(column => {
@@ -31,8 +30,6 @@ export default async function send_pctCOMMANDE(commandes) {
       });
 
       let txt = `INSERT INTO pct_COMMANDE(${columns}) VALUES(${query}); `;
-
-      console.log(txt);
 
       await query_pctCOMMANDE(txt);
     })
