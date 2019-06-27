@@ -21,6 +21,8 @@ export default async function sendRemote(
         throw Error(commande_result);
       }
 
+      console.log("passed commandes");
+
       const composition_result = await send_pctCOMMANDEcomposition(
         commande_composition
       );
@@ -29,11 +31,15 @@ export default async function sendRemote(
         throw Error(composition_result);
       }
 
+      console.log("passed composition");
+
       const tournee_result = await send_Tournee(tournee);
 
       if (tournee_result !== "ok") {
         throw Error(tournee_result);
       }
+
+      console.log("passed tournee");
 
       await MSSQL.executeUpdate("COMMIT");
       get_Code_Commande(depot);

@@ -1,6 +1,6 @@
 {
-  "name": "jp",
-  "version": "0.0.1",
+  "name": "Alfoz",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -12,6 +12,7 @@
     "events": "^3.0.0",
     "immutability-helper": "^3.0.0",
     "lodash": "^4.17.11",
+    "moment": "^2.24.0",
     "prop-types": "^15.7.2",
     "react": "16.8.3",
     "react-dots-loader": "^1.1.4",

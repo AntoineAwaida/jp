@@ -1,5 +1,7 @@
 import { DB } from "../../database/database";
 
+import moment from "moment";
+
 export default function saveTournee(tournee) {
   DB.getDatabase().then(db =>
     db.transaction(tx => {

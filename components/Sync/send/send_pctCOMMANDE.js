@@ -1,12 +1,18 @@
 import logError from "../../Settings/logError";
 import query_pctCOMMANDE from "./query_pctCOMMANDE";
 
+import moment from "moment";
+
 export default async function send_pctCOMMANDE(commandes) {
   return await Promise.all(
     commandes.map(async (item, i) => {
       let columns = "";
       //formatage avec des quotes pour être en varchar sur la remote db
+
+      item.DateCreation = moment(item.DateCreation).format("YYYYMMDD HH:mm:ss");
       item.DateCreation = "'" + item.DateCreation + "'";
+
+      console.log(item.DateCreation);
       item.Code_Client = "'" + item.Code_Client + "'";
       item.nomPoste = "'" + item.nomPoste + "'";
       Object.keys(item).map(column => {
@@ -25,6 +31,8 @@ export default async function send_pctCOMMANDE(commandes) {
       });
 
       let txt = `INSERT INTO pct_COMMANDE(${columns}) VALUES(${query}); `;
+
+      console.log(txt);
 
       await query_pctCOMMANDE(txt);
     })
