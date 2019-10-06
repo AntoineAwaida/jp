@@ -9,11 +9,3 @@ export default async function testConnection() {
   return await MSSQL.connect(config);
 }
 
-const myconfig = {
-  server: "80.12.80.85",
-  username: "sa",
-  password: "Cyberjet09",
-  database: "DataXV",
-  port: 1433,
-  timeout: 5
-};
